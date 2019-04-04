@@ -1,0 +1,17 @@
+[package]
+name = "greenwood"
+version = "1.0.0"
+authors = ["Rémi Lefèvre <rlefevre@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+chrono = "0.4"
+diesel = { version = "1.4.2", features = ["sqlite"] }
+dotenv = "0.13.0"
+log = "0.4.6"
+reqwest = "0.9.13"
+rss = "1.7.0"
+serde = { version = "1.0.90", features = ["derive"] }
+serde_json = "1.0.39"
+syslog = "4.0.1"
+warp = "0.1.15"

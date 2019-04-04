@@ -1,0 +1,9 @@
+/target
+web/elm-stuff
+web/index.html
+web/static/elm.js
+web/static/*.*.js
+web/static/*.*.css
+**/*.rs.bk
+.*.un~
+.*.swp

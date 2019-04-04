@@ -1,0 +1,14 @@
+[Unit]
+Description=Elm Greenwood RSS Server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/greenwood
+Environment=DATABASE_URL=/var/lib/greenwood/elm-greenwood.db
+Environment=WWW_ROOT=/var/www/greenwood
+User=greenwood
+
+
+[Install]
+WantedBy=default.target

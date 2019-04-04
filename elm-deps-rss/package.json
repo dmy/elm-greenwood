@@ -1,0 +1,26 @@
+{
+  "name": "elm-deps-rss",
+  "version": "1.0.0",
+  "description": "Generate an Elm project RSS feed for its dependencies releases",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmy/elm-greenwood.git"
+  },
+  "keywords": [
+    "rss",
+    "elm",
+    "dependencies",
+    "releases",
+    "packages"
+  ],
+  "author": "Rémi Lefèvre <rlefevre@gmail.com>",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/dmy/elm-greenwood/issues"
+  },
+  "homepage": "https://github.com/dmy/elm-greenwood#readme"
+}
