@@ -19,9 +19,15 @@ if (!fs.existsSync(elmJsonPath)) {
 
 const elmJson = JSON.parse(fs.readFileSync(elmJsonPath));
 
+let deps = [];
+if (elmJson.type == "package") {
+    deps = Object.keys(elmJson.dependencies);
+} else {
+    deps = Object.keys(elmJson.dependencies.direct)
+        .concat(Object.keys(elmJson.dependencies.indirect));
+}
+
 let queryMap = {};
-deps = Object.keys(elmJson.dependencies.direct)
-    .concat(Object.keys(elmJson.dependencies.indirect));
 deps.forEach(dep => {
     let [author, pkg] = dep.split("/");
     if (author in queryMap) {
