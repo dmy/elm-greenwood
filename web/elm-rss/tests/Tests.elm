@@ -6,9 +6,10 @@ import Rss.Channel as Channel
 import Rss.Item as Item
 import Test exposing (..)
 import Time exposing (Month(..))
+import Xml.Decode as Xml
 
 
-minRss : Result String Rss
+minRss : Result Xml.Errors Rss
 minRss =
     Rss.decode """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -22,7 +23,7 @@ minRss =
 """
 
 
-fullRss : Result String Rss
+fullRss : Result Xml.Errors Rss
 fullRss =
     Rss.decode """
 <?xml version="1.0" encoding="UTF-8"?>
