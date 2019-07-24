@@ -150,6 +150,9 @@ stringHelp (Xml x) =
         Doc.Element _ _ [ Doc.Text str ] ->
             Ok str
 
+        Doc.Element _ _ [] ->
+            Ok ""
+
         _ ->
             Err [ ExpectingString ]
 
