@@ -10,6 +10,7 @@ pub fn all(query: HashMap<String, String>, release: &Release) -> String {
     let conn = db::connect();
     let packages = db::last_packages(&conn, &query, release);
     let items: Vec<Item> = packages.iter().map(item).filter_map(Result::ok).collect();
+    let title = channel_title(&query, release);
     let last_timestamp = packages
         .iter()
         .map(|item| item.timestamp)
@@ -17,9 +18,9 @@ pub fn all(query: HashMap<String, String>, release: &Release) -> String {
         .unwrap_or(Utc::now().timestamp());
 
     let channel = ChannelBuilder::default()
-        .title(channel_title(&query, release))
+        .title(&title)
         .link("https://elm-greenwood.com")
-        .description(channel_description(release))
+        .description(format!("{} from elm-greenwood.com", &title))
         .image(channel_image())
         .webmaster("admin@elm-greenwood.com".to_string())
         .copyright(channel_copyright())
@@ -58,17 +59,6 @@ fn channel_title(query: &HashMap<String, String>, release: &Release) -> String {
         format!("Elm packages {}", release_type)
     } else {
         format!("Elm package {} of {}", &release_type, pkgs.join(", "))
-    }
-}
-
-fn channel_description(release: &Release) -> &'static str {
-    match release {
-        Release::Any => "All Elm Packages Releases from elm-greenwood.com.",
-        Release::Last => "The Last Elm Packages Releases from elm-greenwood.com.",
-        Release::First => "The First Elm Packages Releases from elm-greenwood.com.",
-        Release::Major => "The Major Elm Packages Releases from elm-greenwood.com.",
-        Release::Minor => "The Minor Elm Packages Releases from elm-greenwood.com.",
-        Release::Patch => "The Patch Elm Packages Releases from elm-greenwood.com.",
     }
 }
 
