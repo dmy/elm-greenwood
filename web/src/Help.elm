@@ -29,11 +29,19 @@ view =
             ]
         , section "Releases filtering based on semantic versioning "
             [ urlExample "/" "Packages all releases"
-            , urlExample "/last" "Packages last release"
+            , urlExample "/last" "Packages last release (per elm version constraint)"
             , urlExample "/first" "Packages first release"
             , urlExample "/major" "Packages major releases"
             , urlExample "/minor" "Packages minor releases"
             , urlExample "/patch" "Packages patch releases"
+            , p [] []
+            , p []
+                [ "The website returns all releases by default,"
+                , " and the logo can be clicked to return to this feed."
+                ]
+            , p []
+                [ "The search results returns last packages release instead."
+                ]
             ]
         , section "Packages filtering with query parameters"
             [ p [] [ "The format of the query parameters is:" ]
@@ -43,10 +51,22 @@ view =
                 , code [] "'*'"
                 , Ui.text " can be used to request all packages from an author."
                 ]
+            , p []
+                [ "The last releases from an author can also be displayed by"
+                , " clicking the github avatar in the package release details."
+                ]
+            , p [] []
+            , p []
+                [ "It is also possible to use a search query to find packages"
+                , " containing the string in their name or description:"
+                ]
+            , command "_search=string"
+            , p [] [ "This is the query used when using the search box." ]
+            , p [] []
             , Ui.paragraph []
                 [ Ui.text " Several query parameters can be specified with "
                 , code [] "'&'"
-                , Ui.text "."
+                , Ui.text ", but at most one search query can be used."
                 ]
             , Ui.el
                 [ Font.semiBold
@@ -57,6 +77,8 @@ view =
             , urlExample "/major?elm=parser+bytes" "Major releases of elm/parser and elm/bytes"
             , urlExample "/?elm-explorations=*" "All releases from elm-explorations"
             , urlExample "/?elm=*&elm-explorations=*" "All releases from elm and elm-explorations"
+            , urlExample "/last?_search=elm-ui" "Last releases matching \"elm-ui\""
+            , urlExample "/major?_search=router&elm=url" "Major releases from packages matching \"router\" or from elm/url"
             ]
         , section "RSS feeds"
             [ Ui.paragraph []
@@ -72,6 +94,7 @@ view =
                 (Ui.text "Examples:")
             , urlExample "/last/.rss" "RSS for last releases"
             , urlExample "/.rss?elm=*" "RSS for all releases from elm organization"
+            , urlExample "/.rss?_search=elm-ui" "RSS for all releases matching \"elm-ui\""
             ]
         , section "Elm project dependencies feed"
             [ Ui.paragraph []
@@ -133,15 +156,17 @@ p attrs strings =
 
 link : String -> Ui.Element msg
 link url =
-    Ui.link
-        [ Font.color theme.link
-        , Ui.paddingEach { top = 0, left = theme.space.l, right = 0, bottom = theme.space.xs }
-        , Ui.mouseOver
-            [ Font.color theme.overLink ]
+    Ui.paragraph []
+        [ Ui.link
+            [ Font.color theme.link
+            , Ui.paddingEach { top = 0, left = theme.space.l, right = 0, bottom = theme.space.xs }
+            , Ui.mouseOver
+                [ Font.color theme.overLink ]
+            ]
+            { url = url
+            , label = Ui.text url
+            }
         ]
-        { url = url
-        , label = Ui.text url
-        }
 
 
 section : String -> List (Ui.Element msg) -> Ui.Element msg

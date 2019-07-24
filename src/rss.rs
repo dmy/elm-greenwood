@@ -8,9 +8,9 @@ use std::collections::HashMap;
 
 pub fn all(query: HashMap<String, String>, release: &Release) -> String {
     let conn = db::connect();
-    let packages = db::last_packages(&conn, &query, release);
-    let items: Vec<Item> = packages.iter().map(item).filter_map(Result::ok).collect();
     let title = channel_title(&query, release);
+    let packages = db::last_packages(&conn, query, release, 42);
+    let items: Vec<Item> = packages.iter().map(item).filter_map(Result::ok).collect();
     let last_timestamp = packages
         .iter()
         .map(|item| item.timestamp)
@@ -51,14 +51,25 @@ fn channel_title(query: &HashMap<String, String>, release: &Release) -> String {
         query
         .iter()
         .fold(vec![], |mut pkgs, (author,names)| {
-            pkgs.push(format!("{}/{}", author, str::replace(names, " ", "+")));
+            if author != "_search" {
+                pkgs.push(format!("{}/{}", author, str::replace(names, " ", "+")));
+            }
             pkgs
         });
 
-    if pkgs.is_empty() {
-        format!("Elm packages {}", release_type)
-    } else {
-        format!("Elm package {} of {}", &release_type, pkgs.join(", "))
+    match (pkgs.is_empty(), query.get("_search")) {
+        (true, None) => {
+            format!("Elm packages {}", &release_type)
+        },
+        (true, Some(pattern)) => {
+            format!("Elm packages {} matching {}", &release_type, pattern)
+        },
+        (false, None) => {
+            format!("Elm packages {} of {}", &release_type, pkgs.join(", "))
+        },
+        (false, Some(pattern)) => {
+            format!("Elm packages {} of {} or matching {}", &release_type, pkgs.join(", "), pattern)
+        },
     }
 }
 

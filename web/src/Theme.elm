@@ -29,6 +29,7 @@ theme :
     , black : Ui.Color
     , white : Ui.Color
     , dark : Ui.Color
+    , searchBox : Ui.Color
     , newRelease : Ui.Color
     , majorRelease : Ui.Color
     , minorRelease : Ui.Color
@@ -70,6 +71,7 @@ theme =
     , black = Ui.rgb 0 0 0
     , white = Ui.rgb 1 1 1
     , dark = Ui.rgb 0.1 0.1 0.1
+    , searchBox = Ui.rgb 0.8 0.8 0.8
     , newRelease = Ui.rgb255 127 209 59
     , majorRelease = Ui.rgb255 240 173 0
     , minorRelease = Ui.rgb255 96 181 204

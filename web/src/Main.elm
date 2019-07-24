@@ -8,12 +8,15 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
+import Element.Input as Input
 import Element.Keyed as Keyed
 import Element.Lazy as Lazy
 import Help
 import Html
 import Html.Attributes exposing (class)
+import Html.Events
 import Http
+import Json.Decode
 import Json.Encode
 import Package exposing (Package)
 import Rss exposing (Rss)
@@ -39,6 +42,7 @@ type alias Model =
     , url : Url
     , page : Page
     , unfolded : Set String
+    , search : String
     , now : Time.Posix
     , tz : Time.Zone
     , width : Int
@@ -63,11 +67,13 @@ type Loading
 
 
 type Msg
-    = UrlRequested UrlRequest
-    | UrlChanged Url
+    = PackageClicked String
     | RssUpdated (Result Xml.Errors Feed)
+    | SearchInputChanged String
+    | SearchRequested
     | UpdateRequested Time.Posix
-    | PackageClicked String
+    | UrlChanged Url
+    | UrlRequested UrlRequest
     | WindowResized Int Int
 
 
@@ -88,6 +94,7 @@ init flags url navKey =
       , url = newUrl
       , page = page
       , unfolded = Set.empty
+      , search = ""
       , now = Time.millisToPosix flags.now
       , tz = Time.utc
       , width = flags.width
@@ -216,7 +223,7 @@ view model =
                 [ Ui.width Ui.fill
                 , Ui.height Ui.fill
                 ]
-                [ viewHeader model.page model.url model.width
+                [ viewHeader model
                 , Ui.el
                     [ Ui.width (Ui.fill |> Ui.maximum 768)
                     , Ui.height Ui.fill
@@ -242,54 +249,115 @@ layoutOptions =
     ]
 
 
-viewHeader : Page -> Url -> Int -> Ui.Element msg
-viewHeader page currentUrl width =
-    Ui.el
-        [ Ui.width Ui.fill
+viewHeader : Model -> Ui.Element Msg
+viewHeader model =
+    Ui.row
+        [ Ui.width (Ui.fill |> Ui.maximum 768)
+        , Ui.spacing (model.width // 20)
+        , Ui.padding theme.space.m
+        , Ui.centerX
         ]
-        (Ui.row
-            [ Ui.width (Ui.fill |> Ui.maximum 768)
-            , Ui.padding theme.space.m
-            , Ui.centerX
-            , Ui.inFront (viewLoader page)
+        [ viewLogo model.width
+        , Ui.column
+            [ Ui.width Ui.fill
+            , Ui.height Ui.fill
+            , Ui.spacing theme.space.m
             ]
-            [ viewNavigation currentUrl width
+            [ viewSearchBox model.search
+            , viewNavigation model.url
             ]
-        )
-
-
-viewFooter : Time.Zone -> Time.Posix -> Ui.Element msg
-viewFooter tz now =
-    Ui.el
-        [ Ui.centerX
-        , Ui.padding theme.space.s
-        , Font.color theme.patchRelease
-        , Font.size theme.font.size.xxs
         ]
-        (Ui.text ("dmy©" ++ String.fromInt (Time.toYear tz now)))
 
 
-viewTitle : List (Ui.Attribute msg) -> String -> Ui.Element msg
-viewTitle attrs title =
+viewSearchBox : String -> Ui.Element Msg
+viewSearchBox input =
+    Input.text
+        [ Border.rounded 2
+        , Border.color theme.searchBox
+        , Border.width 1
+        , Ui.paddingEach
+            { edges
+                | top = theme.space.m
+                , right = theme.space.xl
+                , bottom = theme.space.m
+                , left = theme.space.m
+            }
+        , Font.size theme.font.size.m
+        , onEnter SearchRequested
+        , Ui.inFront searchIcon
+        ]
+        { onChange = SearchInputChanged
+        , text = input
+        , placeholder = Nothing
+        , label = Input.labelHidden "search"
+        }
+
+
+searchIcon : Ui.Element Msg
+searchIcon =
     Ui.el
-        (Font.color theme.patchRelease
-            :: Font.size theme.font.size.m
-            :: Ui.centerX
-            :: attrs
-        )
-        (Ui.text title)
+        [ Ui.paddingXY theme.space.m 0
+        , Ui.alignRight
+        , Ui.centerY
+        , onBlockedClick SearchRequested
+        , Ui.pointer
+        ]
+    <|
+        Ui.html <|
+            Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
+                [ Svg.path [ SvgA.fill "none", SvgA.d "M0 0h24v24H0V0z" ] []
+                , Svg.path
+                    [ SvgA.d """M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11
+                16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 
+                0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6
+                0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14
+                9.5 14z"""
+                    , SvgA.fill "#cccccc"
+                    ]
+                    []
+                ]
 
 
-viewNavigation : Url -> Int -> Ui.Element msg
-viewNavigation currentUrl width =
+onBlockedClick : msg -> Ui.Attribute msg
+onBlockedClick msg =
+    Ui.htmlAttribute <|
+        Html.Events.custom "click" <|
+            Json.Decode.succeed
+                { message = msg
+                , stopPropagation = True
+                , preventDefault = True
+                }
+
+
+onKey : Int -> msg -> Ui.Attribute msg
+onKey keyCode msg =
+    Ui.htmlAttribute <|
+        Html.Events.on "keyup" <|
+            Json.Decode.andThen
+                (\keyUp ->
+                    if keyUp == keyCode then
+                        Json.Decode.succeed msg
+
+                    else
+                        Json.Decode.fail (String.fromInt keyUp)
+                )
+                Html.Events.keyCode
+
+
+onEnter : msg -> Ui.Attribute msg
+onEnter msg =
+    onKey 13 msg
+
+
+viewNavigation : Url -> Ui.Element msg
+viewNavigation currentUrl =
     Ui.row
         [ Ui.width Ui.fill
+        , Ui.height Ui.fill
         , Ui.spaceEvenly
-        , Ui.paddingXY theme.space.m 0
         , Font.size theme.font.size.m
         ]
-        [ viewLogo width
-        , navLink currentUrl { url = "/last", label = "Last" }
+        [ navLink currentUrl { url = "/last", label = "Last" }
         , navLink currentUrl { url = "/first", label = "First" }
         , navLink currentUrl { url = "/major", label = "Major" }
         , navLink currentUrl { url = "/minor", label = "Minor" }
@@ -331,6 +399,17 @@ viewLogo width =
         }
 
 
+viewTitle : List (Ui.Attribute msg) -> String -> Ui.Element msg
+viewTitle attrs title =
+    Ui.el
+        (Font.color theme.patchRelease
+            :: Font.size theme.font.size.m
+            :: Ui.centerX
+            :: attrs
+        )
+        (Ui.text title)
+
+
 logo : Int -> Ui.Element msg
 logo size =
     Ui.el [ Ui.width (Ui.px size), Ui.height (Ui.px size) ] <|
@@ -353,6 +432,17 @@ logo size =
                 ]
 
 
+viewFooter : Time.Zone -> Time.Posix -> Ui.Element msg
+viewFooter tz now =
+    Ui.el
+        [ Ui.centerX
+        , Ui.padding theme.space.s
+        , Font.color theme.patchRelease
+        , Font.size theme.font.size.xxs
+        ]
+        (Ui.text ("dmy©" ++ String.fromInt (Time.toYear tz now)))
+
+
 viewPage : Model -> Ui.Element Msg
 viewPage model =
     case model.page of
@@ -362,7 +452,17 @@ viewPage model =
                 , Ui.width Ui.fill
                 , Ui.paddingEach { edges | bottom = theme.space.xxl }
                 ]
-                (viewFeedTitle feed.title
+                (( "feedTitle"
+                 , Ui.row
+                    [ Ui.width Ui.fill
+                    , Ui.height (Ui.shrink |> Ui.minimum 21)
+                    , Ui.spacing theme.space.l
+                    ]
+                    [ viewFeedTitle feed.title
+                    , Ui.el [ Ui.width (Ui.px 54), Ui.height (Ui.px 21) ]
+                        (viewLoader model.page)
+                    ]
+                 )
                     :: List.map (viewPackage model) feed.packages
                 )
 
@@ -370,7 +470,12 @@ viewPage model =
             Help.view
 
         Error ->
-            Ui.paragraph []
+            Ui.paragraph
+                [ Font.size theme.font.size.m
+                , Font.color theme.dark
+                , Font.semiBold
+                , Ui.padding theme.space.m
+                ]
                 [ Ui.text "Service unavailable, please retry later or report the issue on "
                 , Ui.link
                     [ Font.color theme.link
@@ -383,28 +488,22 @@ viewPage model =
                 ]
 
 
-viewFeedTitle : String -> ( String, Ui.Element msg )
+viewFeedTitle : String -> Ui.Element msg
 viewFeedTitle title =
-    Tuple.pair "title" <|
-        Ui.el
-            [ Font.size theme.font.size.m
-            , Ui.paddingXY theme.space.m 0
-            , Font.color theme.dark
-            , Font.semiBold
-            ]
-            (Ui.paragraph [] [ Ui.text title ])
+    Ui.el
+        [ Ui.width Ui.fill
+        , Font.size theme.font.size.m
+        , Font.color theme.dark
+        , Font.semiBold
+        ]
+        (Ui.paragraph [] [ Ui.text title ])
 
 
 viewLoader : Page -> Ui.Element msg
 viewLoader page =
     case page of
         Rss Loading _ ->
-            Ui.el
-                [ Ui.alignTop
-                , Ui.alignRight
-                , Ui.paddingXY theme.space.m theme.space.m
-                ]
-                viewSpinner
+            viewSpinner
 
         _ ->
             Ui.none
@@ -839,14 +938,20 @@ backgroundColor pkg =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        PackageClicked id ->
+            ( { model | unfolded = toggle id model.unfolded }, Cmd.none )
+
         RssUpdated (Ok feed) ->
             ( { model | page = Rss Loaded feed }, Cmd.none )
 
         RssUpdated (Err errors) ->
             ( { model | page = Error }, Cmd.none )
 
-        PackageClicked id ->
-            ( { model | unfolded = toggle id model.unfolded }, Cmd.none )
+        SearchInputChanged input ->
+            ( { model | search = input }, Cmd.none )
+
+        SearchRequested ->
+            ( model, Nav.pushUrl model.navKey ("/last?_search=" ++ model.search) )
 
         UpdateRequested now ->
             ( { model | now = now }, getRss model.url )

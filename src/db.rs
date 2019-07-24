@@ -13,8 +13,6 @@ use std::env;
 pub mod models;
 pub mod schema;
 
-const PACKAGES_NUMBER: i64 = 42;
-
 pub fn connect() -> SqliteConnection {
     dotenv().ok();
 
@@ -39,22 +37,33 @@ pub fn save_package(conn: &SqliteConnection, pkg: &NewPackage) {
 
 pub fn last_packages(
     conn: &SqliteConnection,
-    filter: &HashMap<String, String>,
+    mut filter: HashMap<String, String>,
     release: &Release,
+    limit: i64,
 ) -> Vec<Package> {
+    let pattern = filter.remove("_search").map(|s| format!("%{}%", s));
+    let pkgs = query_packages(conn, &filter);
     let mut query = packages
         .order(timestamp.desc())
-        .limit(PACKAGES_NUMBER)
+        .limit(limit)
         .into_boxed();
 
-    let pkgs = query_packages(conn, filter);
-    if !filter.is_empty() {
-        query = query.filter(author.concat("/").concat(name).eq_any(pkgs))
+
+    let pkg_filter = author.concat("/").concat(name).eq_any(&pkgs);
+    let search_filter = |pattern| {
+        (author.concat("/").concat(name)).like(pattern).or(summary.like(pattern))
+    };
+
+    query = match (filter.is_empty(), &pattern) {
+        (false, Some(ref p)) => query.filter(pkg_filter.or(search_filter(p))),
+        (true, Some(ref p)) => query.filter(search_filter(p)),
+        (false, None) => query.filter(pkg_filter),
+        (true, None) => query,
     };
 
     query = match release {
         Release::Any => query,
-        Release::Last => query.group_by(sql::<Text>("author,name HAVING MAX(timestamp)")),
+        Release::Last => query.group_by(sql::<Text>("author,name,elm_version HAVING MAX(timestamp)")),
         Release::First => query.filter(major.eq(1).and(minor.eq(0)).and(patch.eq(0))),
         Release::Major => query.filter(minor.eq(0).and(patch.eq(0))),
         Release::Minor => query.filter(minor.ne(0).and(patch.eq(0))),
@@ -90,7 +99,6 @@ pub fn author_packages(conn: &SqliteConnection, user: &String) -> Vec<String> {
         .distinct()
         .filter(author.eq(user))
         .order(timestamp.desc())
-        .limit(PACKAGES_NUMBER)
         .load::<String>(conn)
         .expect(&format!("Cant load {} packages from database", user))
 }
