@@ -60,8 +60,6 @@ pub fn last_packages(
         Release::Minor => query.filter(minor.ne(0).and(patch.eq(0))),
         Release::Patch => query.filter(patch.ne(0)),
     };
-    let debug = diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query);
-    log::info!("{}", debug.to_string());
 
     query
         .load::<Package>(conn)
