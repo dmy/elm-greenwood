@@ -51,7 +51,7 @@ type alias Rss_ =
 
 {-| Parse the given XML string into an [`Rss`](Rss#Rss).
 
-This will fail if the RSS document is not conform to
+This will fail if the RSS document does not conform to
 [RSS 2.0 specification](http://www.rssboard.org/rss-specification).
 
 -}
@@ -66,7 +66,7 @@ You most likely want to use [`Rss.decode`](Rss#decode) instead.
 decoder : Decoder Rss
 decoder =
     map2 Rss_
-        (attribute "version" string)
+        (element "rss" (attribute "version" string))
         (path [ "rss", "channel" ] Channel.decoder)
         |> map Rss
 
