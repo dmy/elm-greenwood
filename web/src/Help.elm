@@ -16,16 +16,18 @@ view =
         , Font.size 16
         ]
         [ section "About"
-            [ p []
+            [ p
                 [ "The elm-greenwood.com website provides dynamic web and RSS feeds"
                 , " for Elm packages releases."
                 , " You can customize the releases, packages and authors included"
                 , " in a feed by customizing the URL."
                 ]
-            , p [ Ui.paddingEach { top = 8, left = 0, right = 0, bottom = 0 } ]
+            , newp
                 [ "The browser will refresh feeds every 5 minutes, the server"
                 , " is synchonized to the official elm server every minute."
                 ]
+            , newp
+                [ "Feeds are limited to 42 items." ]
             ]
         , section "Releases filtering based on semantic versioning "
             [ urlExample "/" "Packages all releases"
@@ -34,35 +36,31 @@ view =
             , urlExample "/major" "Packages major releases"
             , urlExample "/minor" "Packages minor releases"
             , urlExample "/patch" "Packages patch releases"
-            , p [] []
-            , p []
+            , newp
                 [ "The website returns all releases by default,"
                 , " and the logo can be clicked to return to this feed."
                 ]
-            , p []
+            , p
                 [ "The search results returns last packages release instead."
                 ]
             ]
         , section "Packages filtering with query parameters"
-            [ p [] [ "The format of the query parameters is:" ]
+            [ p [ "The format of the query parameters is:" ]
             , command "author=package[+package2][+...]"
             , Ui.paragraph []
                 [ Ui.text " A wildcard "
                 , code [] "'*'"
                 , Ui.text " can be used to request all packages from an author."
+                , Ui.text " Last releases from an author can also be displayed by"
+                , Ui.text " clicking the github avatar in the package release details."
                 ]
-            , p []
-                [ "The last releases from an author can also be displayed by"
-                , " clicking the github avatar in the package release details."
-                ]
-            , p [] []
-            , p []
+            , newp
                 [ "It is also possible to use a search query to find packages"
                 , " containing the string in their name or description:"
                 ]
             , command "_search=string"
-            , p [] [ "This is the query used when using the search box." ]
-            , p [] []
+            , p [ "This is the query used when using the search box." ]
+            , newp []
             , Ui.paragraph []
                 [ Ui.text " Several query parameters can be specified with "
                 , code [] "'&'"
@@ -115,7 +113,7 @@ view =
             [ link "https://github.com/dmy/elm-greenwood/issues"
             ]
         , section "License"
-            [ p [] [ "BSD 3-Clause" ]
+            [ p [ "BSD 3-Clause" ]
             ]
         ]
 
@@ -144,14 +142,21 @@ urlExample url description =
     Ui.column
         [ Ui.width Ui.fill
         ]
-        [ p [] [ description, ":" ]
+        [ p [ description, ":" ]
         , link url
         ]
 
 
-p : List (Ui.Attribute msg) -> List String -> Ui.Element msg
-p attrs strings =
-    Ui.paragraph attrs (List.map Ui.text strings)
+newp : List String -> Ui.Element msg
+newp strings =
+    Ui.paragraph
+        [ Ui.paddingEach { top = 8, left = 0, right = 0, bottom = 0 } ]
+        (List.map Ui.text strings)
+
+
+p : List String -> Ui.Element msg
+p strings =
+    Ui.paragraph [] (List.map Ui.text strings)
 
 
 link : String -> Ui.Element msg
