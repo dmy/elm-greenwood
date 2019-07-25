@@ -74,7 +74,8 @@ type Msg
     | RssUpdated (Result Xml.Errors Feed)
     | SearchInputChanged String
     | SearchRequested
-    | UpdateRequested Time.Posix
+    | TimeChanged Time.Posix
+    | UpdateRequested
     | UrlChanged Url
     | UrlRequested UrlRequest
     | WindowResized Int Int
@@ -994,8 +995,11 @@ update msg model =
         SearchRequested ->
             ( model, Nav.pushUrl model.navKey ("/last?_search=" ++ model.search) )
 
-        UpdateRequested now ->
+        TimeChanged now ->
             ( { model | now = now }, getRss model.url )
+
+        UpdateRequested ->
+            ( model, getRss model.url )
 
         UrlRequested urlRequest ->
             case urlRequest of
@@ -1038,7 +1042,8 @@ toggle id set =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every (5 * 60 * 1000) UpdateRequested
+        [ Time.every (5 * 60 * 1000) (always UpdateRequested)
+        , Time.every (60 * 1000) TimeChanged
         , Browser.Events.onResize WindowResized
         ]
 
