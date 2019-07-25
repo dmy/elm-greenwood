@@ -722,8 +722,8 @@ viewImage pkg unfolded =
 
 viewName : Package -> Ui.Element msg
 viewName pkg =
-    Ui.el [ Ui.width Ui.fill ]
-        (Ui.text <| pkg.author ++ "/" ++ pkg.name)
+    Ui.paragraph [ Ui.width Ui.fill ]
+        [ Ui.text <| pkg.author ++ "/" ++ pkg.name ]
 
 
 viewVersion : Package -> Ui.Element msg
