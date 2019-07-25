@@ -392,7 +392,11 @@ viewLogo width =
         { url = "/"
         , label =
             Ui.column []
-                [ Ui.el [ Ui.centerX ] (logo 48)
+                [ if width > 768 then
+                    logo 48
+
+                  else
+                    logo 60
                 , viewIf (width > 768) <|
                     \_ -> viewTitle [] "elm greenwood"
                 ]
@@ -412,7 +416,7 @@ viewTitle attrs title =
 
 logo : Int -> Ui.Element msg
 logo size =
-    Ui.el [ Ui.width (Ui.px size), Ui.height (Ui.px size) ] <|
+    Ui.el [ Ui.width (Ui.px size), Ui.height (Ui.px size), Ui.moveUp 2, Ui.centerX ] <|
         Ui.html <|
             Svg.svg
                 [ SvgA.width (String.fromInt size)
