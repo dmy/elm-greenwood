@@ -799,13 +799,8 @@ viewDetails pkg =
                 }
             ]
         , viewInstall pkg
-        , Ui.column [ Ui.spacing theme.space.s ] <|
-            Ui.el
-                [ Font.semiBold
-                , Ui.paddingEach { edges | bottom = theme.space.s }
-                ]
-                (Ui.text "Dependencies:")
-                :: List.map viewDependency (List.sort pkg.dependencies)
+        , viewIf (not (List.isEmpty pkg.dependencies)) <|
+            \_ -> viewDependencies pkg
         ]
 
 
@@ -859,6 +854,17 @@ viewInstall pkg =
             ]
             (Ui.html <| Html.pre [] [ Html.text (Package.install pkg) ])
         ]
+
+
+viewDependencies : Package -> Ui.Element msg
+viewDependencies pkg =
+    Ui.column [ Ui.spacing theme.space.s ] <|
+        Ui.el
+            [ Font.semiBold
+            , Ui.paddingEach { edges | bottom = theme.space.s }
+            ]
+            (Ui.text "Dependencies:")
+            :: List.map viewDependency (List.sort pkg.dependencies)
 
 
 viewDependency : String -> Ui.Element msg
