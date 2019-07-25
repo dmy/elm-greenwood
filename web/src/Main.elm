@@ -13,7 +13,7 @@ import Element.Keyed as Keyed
 import Element.Lazy as Lazy
 import Help
 import Html
-import Html.Attributes exposing (attribute, class)
+import Html.Attributes exposing (attribute, class, title)
 import Html.Events
 import Http
 import Json.Decode
@@ -300,7 +300,7 @@ searchButton =
         [ Ui.paddingXY theme.space.m 0
         , Ui.alignRight
         , Ui.centerY
-        , Ui.htmlAttribute (Html.Attributes.title "Search")
+        , Ui.htmlAttribute (title "Search")
         , onBlockedClick SearchRequested
         , Ui.pointer
         , Font.color theme.searchBox
@@ -723,7 +723,9 @@ viewImage pkg unfolded =
                 }
     in
     if unfolded then
-        Ui.link []
+        Ui.link
+            [ Ui.htmlAttribute (title (pkg.author ++ " last releases"))
+            ]
             { url = "/last?" ++ pkg.author ++ "=*"
             , label = img
             }
@@ -867,7 +869,7 @@ copyToClipboardButton pkg =
     Input.button
         [ Ui.pointer
         , Ui.mouseDown [ Font.color theme.overLink ]
-        , Ui.htmlAttribute (Html.Attributes.title "Copy to clipboard")
+        , Ui.htmlAttribute (title "Copy to clipboard")
         , Ui.htmlAttribute (class "copy-button")
         , Ui.htmlAttribute <| attribute "data-clipboard-text" (Package.install pkg)
         ]
