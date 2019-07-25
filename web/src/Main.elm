@@ -399,7 +399,12 @@ viewLogo =
         { url = "/"
         , label =
             Ui.el
-                [ Ui.width (Ui.px 60), Ui.height (Ui.px 60), Ui.moveUp 2, Ui.centerX ]
+                [ Ui.width (Ui.px 60)
+                , Ui.height (Ui.px 60)
+                , Ui.moveUp 2
+                , Ui.centerX
+                , Ui.htmlAttribute (title "All releases")
+                ]
                 (Icon.logo 60)
         }
 
