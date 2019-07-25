@@ -514,7 +514,6 @@ rssFeedLink url =
     Ui.link
         [ Ui.alignRight
         , Font.color theme.link
-        , Background.color theme.white
         , Ui.htmlAttribute (title "RSS feed")
         , Ui.mouseOver
             [ Font.color theme.overLink ]
