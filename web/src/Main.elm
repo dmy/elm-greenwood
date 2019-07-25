@@ -867,6 +867,7 @@ copyToClipboardButton pkg =
     Input.button
         [ Ui.pointer
         , Ui.mouseDown [ Font.color theme.overLink ]
+        , Ui.htmlAttribute (Html.Attributes.title "Copy to clipboard")
         , Ui.htmlAttribute (class "copy-button")
         , Ui.htmlAttribute <| attribute "data-clipboard-text" (Package.install pkg)
         ]
