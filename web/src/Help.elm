@@ -1,7 +1,6 @@
 module Help exposing (view)
 
 import Element as Ui
-import Element.Background as Background
 import Element.Font as Font
 import Element.Region as Region
 import Html

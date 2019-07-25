@@ -5,19 +5,16 @@ import Parser
     exposing
         ( (|.)
         , (|=)
-        , DeadEnd
         , Parser
         , Step
         , andThen
         , chompIf
         , chompUntil
         , chompWhile
-        , end
         , getChompedString
         , getOffset
         , loop
         , map
-        , multiComment
         , oneOf
         , succeed
         , symbol
@@ -71,15 +68,6 @@ whitespace =
 
 
 -- UTILS
-
-
-maybe : Parser a -> Parser (Maybe a)
-maybe parser_ =
-    oneOf
-        [ succeed Just
-            |= parser_
-        , succeed Nothing
-        ]
 
 
 zeroOrMore : Parser a -> Parser (List a)

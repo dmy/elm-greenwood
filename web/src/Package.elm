@@ -14,7 +14,7 @@ module Package exposing
     )
 
 import DateFormat
-import Rss exposing (Item)
+import Rss
 import Rss.Item
 import Set exposing (Set)
 import Time

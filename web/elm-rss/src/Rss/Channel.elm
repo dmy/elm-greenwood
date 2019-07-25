@@ -49,7 +49,7 @@ module Rss.Channel exposing
 import Imf.DateTime
 import Rss.Item as Item exposing (Category, Item)
 import Time exposing (Weekday(..))
-import Xml.Decode as Xml exposing (..)
+import Xml.Decode exposing (..)
 
 
 {-| A `Channel` contains information about the channel (metadata) and its contents.

@@ -23,9 +23,6 @@ import Package exposing (Package)
 import Rss exposing (Rss)
 import Rss.Channel
 import Set exposing (Set)
-import Svg
-import Svg.Attributes as SvgA
-import Task
 import Theme exposing (theme)
 import Time
 import Url exposing (Url)
@@ -417,17 +414,6 @@ viewLogo =
                 ]
                 (Icon.logo 60)
         }
-
-
-viewTitle : List (Ui.Attribute msg) -> String -> Ui.Element msg
-viewTitle attrs title =
-    Ui.el
-        (Font.color theme.patchRelease
-            :: Font.size theme.font.size.m
-            :: Ui.centerX
-            :: attrs
-        )
-        (Ui.text title)
 
 
 viewTruncatedListWarning : Page -> Ui.Element msg
