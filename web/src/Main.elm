@@ -272,7 +272,7 @@ viewHeader model =
 viewSearchBox : String -> Ui.Element Msg
 viewSearchBox input =
     Input.text
-        [ Border.rounded 2
+        [ Border.rounded 0
         , Border.color theme.searchBox
         , Border.width 1
         , Ui.paddingEach
@@ -301,6 +301,9 @@ searchIcon =
         , Ui.centerY
         , onBlockedClick SearchRequested
         , Ui.pointer
+        , Font.color theme.searchBox
+        , Ui.mouseDown
+            [ Font.color theme.patchRelease ]
         ]
     <|
         Ui.html <|
@@ -312,7 +315,7 @@ searchIcon =
                 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6
                 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14
                 9.5 14z"""
-                    , SvgA.fill "#cccccc"
+                    , SvgA.fill "currentColor"
                     ]
                     []
                 ]
