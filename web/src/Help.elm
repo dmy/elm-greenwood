@@ -44,7 +44,7 @@ view =
                 , Ui.text " logo can be clicked to return to this feed."
                 ]
             , newp
-                [ "The search results returns last packages release instead."
+                [ "The search results return last packages release instead."
                 ]
             ]
         , section "Packages filtering with query parameters"
