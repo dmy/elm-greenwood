@@ -257,7 +257,7 @@ viewHeader model =
         , Ui.padding theme.space.m
         , Ui.centerX
         ]
-        [ viewLogo model.width
+        [ viewLogo
         , Ui.column
             [ Ui.width Ui.fill
             , Ui.height Ui.fill
@@ -393,20 +393,11 @@ navLink currentUrl config =
         }
 
 
-viewLogo : Int -> Ui.Element msg
-viewLogo width =
+viewLogo : Ui.Element msg
+viewLogo =
     Ui.link []
         { url = "/"
-        , label =
-            Ui.column []
-                [ if width > 768 then
-                    logo 48
-
-                  else
-                    logo 60
-                , viewIf (width > 768) <|
-                    \_ -> viewTitle [] "elm greenwood"
-                ]
+        , label = Ui.column [] [ logo 60 ]
         }
 
 
