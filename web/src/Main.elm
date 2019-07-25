@@ -768,7 +768,7 @@ viewDetails pkg =
             , link
                 { url = Package.releases pkg
                 , label = "Releases"
-                , image = Icon.logo 32
+                , image = Ui.el [ Ui.width (Ui.px 32) ] (Icon.logo 32)
                 }
             , link
                 { url = Package.doc pkg
