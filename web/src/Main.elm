@@ -16,6 +16,7 @@ import Html
 import Html.Attributes exposing (attribute, class, title)
 import Html.Events
 import Http
+import Icon
 import Json.Decode
 import Json.Encode
 import Package exposing (Package)
@@ -162,23 +163,24 @@ loadingFeed =
 
 getRss : Url -> Cmd Msg
 getRss url =
-    let
-        rssUrl =
-            if String.endsWith "/" url.path then
-                { url | path = url.path ++ ".rss" }
-
-            else
-                { url | path = url.path ++ "/.rss" }
-    in
     case url.path of
         "/help" ->
             Cmd.none
 
         _ ->
             Http.get
-                { url = Url.toString rssUrl
+                { url = Url.toString (rssFeed url)
                 , expect = expectRss RssUpdated
                 }
+
+
+rssFeed : Url -> Url
+rssFeed url =
+    if String.endsWith "/" url.path then
+        { url | path = url.path ++ ".rss" }
+
+    else
+        { url | path = url.path ++ "/.rss" }
 
 
 expectRss : (Result Xml.Errors Feed -> msg) -> Http.Expect msg
@@ -308,20 +310,7 @@ searchButton =
             [ Font.color theme.overLink ]
         ]
         { onPress = Nothing
-        , label =
-            Ui.html <|
-                Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
-                    [ Svg.path [ SvgA.fill "none", SvgA.d "M0 0h24v24H0V0z" ] []
-                    , Svg.path
-                        [ SvgA.d """M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11
-                      16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61
-                      0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6
-                      0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14
-                      9.5 14z"""
-                        , SvgA.fill "currentColor"
-                        ]
-                        []
-                    ]
+        , label = Icon.search
         }
 
 
@@ -397,7 +386,10 @@ viewLogo : Ui.Element msg
 viewLogo =
     Ui.link []
         { url = "/"
-        , label = Ui.column [] [ logo 60 ]
+        , label =
+            Ui.el
+                [ Ui.width (Ui.px 60), Ui.height (Ui.px 60), Ui.moveUp 2, Ui.centerX ]
+                (Icon.logo 60)
         }
 
 
@@ -410,28 +402,6 @@ viewTitle attrs title =
             :: attrs
         )
         (Ui.text title)
-
-
-logo : Int -> Ui.Element msg
-logo size =
-    Ui.el [ Ui.width (Ui.px size), Ui.height (Ui.px size), Ui.moveUp 2, Ui.centerX ] <|
-        Ui.html <|
-            Svg.svg
-                [ SvgA.width (String.fromInt size)
-                , SvgA.height (String.fromInt size)
-                , SvgA.viewBox "0 0 200 200"
-                ]
-                [ Svg.g
-                    [ SvgA.stroke "#fff", SvgA.strokeWidth "4px" ]
-                    [ polygon "#7fd13bff" "100,0 200,100 100,100"
-                    , polygon "#7fd13bff" "0,100 50,100 50,150"
-                    , polygon "#7fd13bff" "50,100 50,150 100,150"
-                    , polygon "#60b5ccff" "50,100 100,150 150,100"
-                    , polygon "#7fd13bff" "100,150 150,100 200,100 150,150"
-                    , polygon "#5a6378ff" "75,150 125,150 125,200 75,200"
-                    , polygon "#7fd13bff" "100,0 100,100 0,100"
-                    ]
-                ]
 
 
 viewFooter : Time.Zone -> Time.Posix -> Ui.Element msg
@@ -462,7 +432,7 @@ viewPage model =
                     ]
                     [ viewFeedTitle feed.title
                     , Ui.el [ Ui.width (Ui.px 54), Ui.height (Ui.px 21) ]
-                        (viewLoader model.page)
+                        (viewSpinnerOrRssFeed model.url model.page)
                     ]
                  )
                     :: List.map (viewPackage model) feed.packages
@@ -501,14 +471,14 @@ viewFeedTitle title =
         (Ui.paragraph [] [ Ui.text title ])
 
 
-viewLoader : Page -> Ui.Element msg
-viewLoader page =
+viewSpinnerOrRssFeed : Url -> Page -> Ui.Element msg
+viewSpinnerOrRssFeed url page =
     case page of
         Rss Loading _ ->
             viewSpinner
 
         _ ->
-            Ui.none
+            rssFeedLink url
 
 
 viewSpinner : Ui.Element msg
@@ -521,6 +491,21 @@ viewSpinner =
                 , Html.div [ class "bounce3" ] []
                 ]
             ]
+
+
+rssFeedLink : Url -> Ui.Element msg
+rssFeedLink url =
+    Ui.link
+        [ Ui.alignRight
+        , Font.color theme.link
+        , Background.color theme.white
+        , Ui.htmlAttribute (title "RSS feed")
+        , Ui.mouseOver
+            [ Font.color theme.overLink ]
+        ]
+        { url = Url.toString (rssFeed url)
+        , label = Icon.rssFeed 24
+        }
 
 
 viewPackage : Model -> Package -> ( String, Ui.Element Msg )
@@ -632,22 +617,7 @@ viewPackageHeader pkg unfolded =
 
 viewFoldArrow : Ui.Element msg
 viewFoldArrow =
-    Ui.el [ Ui.alignBottom, Ui.centerX, Ui.moveDown 1 ] <|
-        Ui.html <|
-            Svg.svg
-                [ SvgA.viewBox "0 0 100 50"
-                , SvgA.height "8"
-                ]
-                [ polygon "white" "0,50, 100,50 50,0" ]
-
-
-polygon : String -> String -> Svg.Svg msg
-polygon color points =
-    Svg.polygon
-        [ SvgA.fill color
-        , SvgA.points points
-        ]
-        []
+    Ui.el [ Ui.alignBottom, Ui.centerX, Ui.moveDown 1 ] Icon.foldArrow
 
 
 viewContent : Package -> Bool -> Ui.Element Msg
@@ -787,7 +757,7 @@ viewDetails pkg =
             , link
                 { url = Package.releases pkg
                 , label = "Releases"
-                , image = logo 32
+                , image = Icon.logo 32
                 }
             , link
                 { url = Package.doc pkg
@@ -874,40 +844,8 @@ copyToClipboardButton pkg =
         , Ui.htmlAttribute <| attribute "data-clipboard-text" (Package.install pkg)
         ]
         { onPress = Nothing
-        , label = copyToClipboardIcon
+        , label = Icon.copyToClipboard
         }
-
-
-copyToClipboardIcon : Ui.Element Msg
-copyToClipboardIcon =
-    Ui.html <|
-        Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
-            [ Svg.path [ SvgA.d "M0 0h24v24H0z", SvgA.fill "none" ] []
-            , Svg.path
-                [ SvgA.d """m11.667 10.333h1.3333v-1.3333h-1.3333zm0
-                  10.667h1.3333v-1.3333h-1.3333zm2.6667 0h1.3333v-1.3333h-1.3333zm-5.3333
-                  0h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v
-                  -1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h
-                  -1.3333zm10.667 8h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0
-                  5.3333h1.3333v-1.3333h-1.3333zm0-8h1.3333v-1.3333h-1.3333zm0-4v1.3333h1.3333v-1.3333zm-5.3333
-                  1.3333h1.3333v-1.3333h-1.3333zm2.6667 10.667h1.3333v-1.3333h-1.3333zm0-10.667h1.3333v-1.3333h-1.3333z"""
-                , SvgA.strokeWidth ".66667"
-                , SvgA.fill "currentColor"
-                ]
-                []
-            , Svg.path
-                [ SvgA.d """m17.222 2.7778h-3.7156c-0.37333-1.0311-1.3511-1.7778-2.5067-1.7778-1.1556
-                  0-2.1333 0.74667-2.5067 1.7778h-3.7156c-0.97778 0-1.7778 0.8-1.7778 1.7778v12.444c0
-                  0.97778 0.8 1.7778 1.7778 1.7778h12.444c0.97778 0 1.7778-0.8
-                  1.7778-1.7778v-12.444c0-0.97778-0.8-1.7778-1.7778-1.7778zm-6.2222
-                  0c0.48889 0 0.88889 0.4 0.88889 0.88889 0 0.48889-0.4 0.88889-0.88889
-                  0.88889s-0.88889-0.4-0.88889-0.88889c0-0.48889 0.4-0.88889
-                  0.88889-0.88889zm4.4444 12.444h-8.8889v-8.8889h8.8889z"""
-                , SvgA.strokeWidth ".88889"
-                , SvgA.fill "currentColor"
-                ]
-                []
-            ]
 
 
 viewDependencies : Package -> Ui.Element msg
@@ -948,12 +886,7 @@ viewDependency dep =
 -- VIEW HELPERS
 
 
-edges :
-    { top : Int
-    , right : Int
-    , bottom : Int
-    , left : Int
-    }
+edges : { top : Int, right : Int, bottom : Int, left : Int }
 edges =
     { top = 0
     , right = 0

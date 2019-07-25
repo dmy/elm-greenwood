@@ -5,6 +5,7 @@ import Element.Background as Background
 import Element.Font as Font
 import Element.Region as Region
 import Html
+import Icon
 import Theme exposing (theme)
 
 
@@ -27,7 +28,7 @@ view =
                 , " is synchonized to the official elm server every minute."
                 ]
             , newp
-                [ "Feeds are limited to 42 items." ]
+                [ "Feeds are quite arbitrary limited to 42 items." ]
             ]
         , section "Releases filtering based on semantic versioning "
             [ urlExample "/" "Packages all releases"
@@ -36,11 +37,13 @@ view =
             , urlExample "/major" "Packages major releases"
             , urlExample "/minor" "Packages minor releases"
             , urlExample "/patch" "Packages patch releases"
-            , newp
-                [ "The website returns all releases by default,"
-                , " and the logo can be clicked to return to this feed."
+            , Ui.paragraph [ Ui.paddingEach { edges | top = theme.space.m } ]
+                [ Ui.text "The website returns all releases by default,"
+                , Ui.text " and the "
+                , Ui.el [] (Icon.logo 24)
+                , Ui.text " logo can be clicked to return to this feed."
                 ]
-            , p
+            , newp
                 [ "The search results returns last packages release instead."
                 ]
             ]
@@ -68,7 +71,7 @@ view =
                 ]
             , Ui.el
                 [ Font.semiBold
-                , Ui.paddingEach { top = 8, left = 0, right = 0, bottom = 4 }
+                , Ui.paddingEach { edges | top = theme.space.m, bottom = theme.space.s }
                 ]
                 (Ui.text "Examples:")
             , urlExample "/last?elm=*" "Last releases from elm organization"
@@ -83,11 +86,14 @@ view =
                 [ Ui.text "You can create an RSS feed by adding "
                 , code [] "\"/.rss\""
                 , Ui.text " to the end of an URL"
-                , Ui.text ", before the optional query parameters."
+                , Ui.text ", before the optional query parameters, "
+                , Ui.text " or by clicking the header "
+                , Ui.el [ Font.color theme.link ] (Icon.rssFeed 16)
+                , Ui.text " icon link to get the current feed."
                 ]
             , Ui.el
                 [ Font.semiBold
-                , Ui.paddingEach { top = 8, left = 0, right = 0, bottom = 4 }
+                , Ui.paddingEach { edges | top = 8, bottom = 4 }
                 ]
                 (Ui.text "Examples:")
             , urlExample "/last/.rss" "RSS for last releases"
@@ -164,7 +170,7 @@ link url =
     Ui.paragraph []
         [ Ui.link
             [ Font.color theme.link
-            , Ui.paddingEach { top = 0, left = theme.space.l, right = 0, bottom = theme.space.xs }
+            , Ui.paddingEach { edges | left = theme.space.l, bottom = theme.space.xs }
             , Ui.mouseOver
                 [ Font.color theme.overLink ]
             ]
@@ -186,3 +192,12 @@ section title elms =
             [ Ui.text title ]
         , Ui.column [ Ui.spacing 4 ] elms
         ]
+
+
+edges : { top : Int, right : Int, bottom : Int, left : Int }
+edges =
+    { top = 0
+    , right = 0
+    , bottom = 0
+    , left = 0
+    }
