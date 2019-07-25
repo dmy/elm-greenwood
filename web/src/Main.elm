@@ -13,7 +13,7 @@ import Element.Keyed as Keyed
 import Element.Lazy as Lazy
 import Help
 import Html
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (attribute, class)
 import Html.Events
 import Http
 import Json.Decode
@@ -272,7 +272,8 @@ viewHeader model =
 viewSearchBox : String -> Ui.Element Msg
 viewSearchBox input =
     Input.text
-        [ Border.rounded 0
+        [ Input.focusedOnLoad
+        , Border.rounded 0
         , Border.color theme.searchBox
         , Border.width 1
         , Ui.paddingEach
@@ -284,7 +285,7 @@ viewSearchBox input =
             }
         , Font.size theme.font.size.m
         , onEnter SearchRequested
-        , Ui.inFront searchIcon
+        , Ui.inFront searchButton
         ]
         { onChange = SearchInputChanged
         , text = input
@@ -293,32 +294,35 @@ viewSearchBox input =
         }
 
 
-searchIcon : Ui.Element Msg
-searchIcon =
-    Ui.el
+searchButton : Ui.Element Msg
+searchButton =
+    Input.button
         [ Ui.paddingXY theme.space.m 0
         , Ui.alignRight
         , Ui.centerY
+        , Ui.htmlAttribute (Html.Attributes.title "Search")
         , onBlockedClick SearchRequested
         , Ui.pointer
         , Font.color theme.searchBox
         , Ui.mouseDown
-            [ Font.color theme.patchRelease ]
+            [ Font.color theme.overLink ]
         ]
-    <|
-        Ui.html <|
-            Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
-                [ Svg.path [ SvgA.fill "none", SvgA.d "M0 0h24v24H0V0z" ] []
-                , Svg.path
-                    [ SvgA.d """M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11
-                16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 
-                0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6
-                0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14
-                9.5 14z"""
-                    , SvgA.fill "currentColor"
+        { onPress = Nothing
+        , label =
+            Ui.html <|
+                Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
+                    [ Svg.path [ SvgA.fill "none", SvgA.d "M0 0h24v24H0V0z" ] []
+                    , Svg.path
+                        [ SvgA.d """M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11
+                      16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61
+                      0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6
+                      0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14
+                      9.5 14z"""
+                        , SvgA.fill "currentColor"
+                        ]
+                        []
                     ]
-                    []
-                ]
+        }
 
 
 onBlockedClick : msg -> Ui.Attribute msg
@@ -655,7 +659,7 @@ polygon color points =
         []
 
 
-viewContent : Package -> Bool -> Ui.Element msg
+viewContent : Package -> Bool -> Ui.Element Msg
 viewContent pkg unfolded =
     Ui.column
         [ Ui.width Ui.fill
@@ -771,7 +775,7 @@ viewTag pkg =
         )
 
 
-viewDetails : Package -> Ui.Element msg
+viewDetails : Package -> Ui.Element Msg
 viewDetails pkg =
     Ui.column
         [ Ui.width Ui.fill
@@ -835,25 +839,81 @@ linkImage config =
         }
 
 
-viewInstall : Package -> Ui.Element msg
+viewInstall : Package -> Ui.Element Msg
 viewInstall pkg =
     Ui.column
         [ Ui.width Ui.fill
         , Ui.spacing theme.space.s
         ]
         [ Ui.el [ Font.semiBold ] (Ui.text "Install:")
-        , Ui.el
+        , Ui.row
             [ Ui.width Ui.fill
-            , Background.color theme.background
+            , Ui.spacing theme.space.l
             , Font.size theme.font.size.s
-            , Ui.scrollbarX
+            , Background.color theme.background
             , Font.family
                 [ Font.typeface "Source Code Pro"
                 , Font.monospace
                 ]
             ]
-            (Ui.html <| Html.pre [] [ Html.text (Package.install pkg) ])
+            [ Ui.el [ Ui.width Ui.fill, Ui.scrollbarX ] <|
+                Ui.html <|
+                    Html.pre [ Html.Attributes.id (Package.id pkg) ]
+                        [ Html.text (Package.install pkg) ]
+            , Ui.el
+                [ Font.color theme.dark
+                , Ui.width (Ui.px theme.space.xl)
+                ]
+                (Ui.el [ Ui.alignRight, Ui.centerY ]
+                    (copyToClipboardButton pkg)
+                )
+            ]
         ]
+
+
+copyToClipboardButton : Package -> Ui.Element Msg
+copyToClipboardButton pkg =
+    Input.button
+        [ Ui.pointer
+        , Ui.mouseDown [ Font.color theme.overLink ]
+        , Ui.htmlAttribute (class "copy-button")
+        , Ui.htmlAttribute <| attribute "data-clipboard-text" (Package.install pkg)
+        ]
+        { onPress = Nothing
+        , label = copyToClipboardIcon
+        }
+
+
+copyToClipboardIcon : Ui.Element Msg
+copyToClipboardIcon =
+    Ui.html <|
+        Svg.svg [ SvgA.width "24", SvgA.height "24", SvgA.viewBox "0 0 24 24" ]
+            [ Svg.path [ SvgA.d "M0 0h24v24H0z", SvgA.fill "none" ] []
+            , Svg.path
+                [ SvgA.d """m11.667 10.333h1.3333v-1.3333h-1.3333zm0
+                  10.667h1.3333v-1.3333h-1.3333zm2.6667 0h1.3333v-1.3333h-1.3333zm-5.3333
+                  0h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v
+                  -1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h
+                  -1.3333zm10.667 8h1.3333v-1.3333h-1.3333zm0-2.6667h1.3333v-1.3333h-1.3333zm0
+                  5.3333h1.3333v-1.3333h-1.3333zm0-8h1.3333v-1.3333h-1.3333zm0-4v1.3333h1.3333v-1.3333zm-5.3333
+                  1.3333h1.3333v-1.3333h-1.3333zm2.6667 10.667h1.3333v-1.3333h-1.3333zm0-10.667h1.3333v-1.3333h-1.3333z"""
+                , SvgA.strokeWidth ".66667"
+                , SvgA.fill "currentColor"
+                ]
+                []
+            , Svg.path
+                [ SvgA.d """m17.222 2.7778h-3.7156c-0.37333-1.0311-1.3511-1.7778-2.5067-1.7778-1.1556
+                  0-2.1333 0.74667-2.5067 1.7778h-3.7156c-0.97778 0-1.7778 0.8-1.7778 1.7778v12.444c0
+                  0.97778 0.8 1.7778 1.7778 1.7778h12.444c0.97778 0 1.7778-0.8
+                  1.7778-1.7778v-12.444c0-0.97778-0.8-1.7778-1.7778-1.7778zm-6.2222
+                  0c0.48889 0 0.88889 0.4 0.88889 0.88889 0 0.48889-0.4 0.88889-0.88889
+                  0.88889s-0.88889-0.4-0.88889-0.88889c0-0.48889 0.4-0.88889
+                  0.88889-0.88889zm4.4444 12.444h-8.8889v-8.8889h8.8889z"""
+                , SvgA.strokeWidth ".88889"
+                , SvgA.fill "currentColor"
+                ]
+                []
+            ]
 
 
 viewDependencies : Package -> Ui.Element msg
