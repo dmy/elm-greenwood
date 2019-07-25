@@ -25,7 +25,7 @@ type alias Package =
     , name : String
     , version : String
     , release : Release
-    , description : String
+    , summary : String
     , timestamp : Time.Posix
     , elmVersion : String
     , license : String

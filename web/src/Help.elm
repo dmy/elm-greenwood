@@ -59,7 +59,7 @@ view =
                 ]
             , newp
                 [ "It is also possible to use a search query to find packages"
-                , " containing the string in their name or description:"
+                , " containing the string in their name or summary:"
                 ]
             , command "_search=string"
             , p [ "This is the query used when using the search box." ]

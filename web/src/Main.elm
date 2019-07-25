@@ -672,7 +672,7 @@ viewContent pkg unfolded =
         , Ui.spacing theme.space.l
         , Font.size theme.font.size.m
         ]
-        [ viewDescription pkg unfolded
+        [ viewSummary pkg unfolded
         , viewIf unfolded <|
             \_ -> viewDetails pkg
         , Ui.wrappedRow
@@ -704,8 +704,8 @@ viewLicense pkg unfolded =
         Ui.el [] (Ui.text pkg.license)
 
 
-viewDescription : Package -> Bool -> Ui.Element msg
-viewDescription pkg unfolded =
+viewSummary : Package -> Bool -> Ui.Element msg
+viewSummary pkg unfolded =
     Ui.row
         [ Ui.width Ui.fill
         , Ui.spacing theme.space.m
@@ -714,7 +714,7 @@ viewDescription pkg unfolded =
             [ Ui.alignTop
             , Ui.spacing theme.space.s
             ]
-            [ Ui.text pkg.description
+            [ Ui.text pkg.summary
             ]
         , viewImage pkg unfolded
         ]
