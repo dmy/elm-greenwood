@@ -237,14 +237,23 @@ view model =
                 , Ui.height Ui.fill
                 ]
                 [ viewHeader model
-                , Ui.el
+                , Ui.column
                     [ Ui.width (Ui.fill |> Ui.maximum 768)
                     , Ui.height Ui.fill
                     , Ui.scrollbarY
                     , Ui.centerX
-                    , Ui.padding theme.space.m
+                    , Ui.paddingEach
+                        { edges
+                            | left = theme.space.m
+                            , top = theme.space.m
+                            , right = theme.space.m
+                            , bottom = theme.space.xxl
+                        }
+                    , Ui.spacing theme.space.l
                     ]
-                    (viewPage model)
+                    [ viewPage model
+                    , viewTruncatedListWarning model.page
+                    ]
                 , viewFooter model.tz model.now
                 ]
             )
@@ -420,6 +429,24 @@ viewTitle attrs title =
         (Ui.text title)
 
 
+viewTruncatedListWarning : Page -> Ui.Element msg
+viewTruncatedListWarning page =
+    case page of
+        Rss _ feed ->
+            if List.length feed.packages == 42 then
+                Ui.paragraph
+                    [ Font.size theme.font.size.m ]
+                    [ Ui.text "The maximum number of releases has been returned,"
+                    , Ui.text " some older ones may be missing."
+                    ]
+
+            else
+                Ui.none
+
+        _ ->
+            Ui.none
+
+
 viewFooter : Time.Zone -> Time.Posix -> Ui.Element msg
 viewFooter tz now =
     Ui.el
@@ -438,7 +465,6 @@ viewPage model =
             Keyed.column
                 [ Ui.spacing theme.space.m
                 , Ui.width Ui.fill
-                , Ui.paddingEach { edges | bottom = theme.space.xxl }
                 ]
                 (( "feedTitle"
                  , Ui.row
