@@ -29,6 +29,8 @@ import Task
 import Theme exposing (theme)
 import Time
 import Url exposing (Url)
+import Url.Parser exposing ((<?>))
+import Url.Parser.Query
 import Xml.Decode as Xml
 
 
@@ -137,6 +139,15 @@ getPage url page =
 
         _ ->
             load page
+
+
+getSearchQuery : Url -> String
+getSearchQuery url =
+    Maybe.withDefault "" <|
+        Maybe.withDefault Nothing <|
+            Url.Parser.parse
+                (Url.Parser.top <?> Url.Parser.Query.string "_search")
+                { url | path = "/" }
 
 
 load : Page -> Page
@@ -969,7 +980,11 @@ update msg model =
                     ( model, Nav.load href )
 
         UrlChanged url ->
-            ( { model | page = getPage url model.page, url = url }
+            ( { model
+                | page = getPage url model.page
+                , url = url
+                , search = getSearchQuery url
+              }
             , getRss url
             )
 
