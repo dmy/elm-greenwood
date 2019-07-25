@@ -17,7 +17,13 @@ pub fn all(query: HashMap<String, String>, release: &Release) -> String {
         .max()
         .unwrap_or(Utc::now().timestamp());
 
+    let mut namespaces = HashMap::new();
+    namespaces.insert(
+        "content".to_string(),
+        "http://purl.org/rss/1.0/modules/content/".to_string(),
+    );
     let channel = ChannelBuilder::default()
+        .namespaces(namespaces)
         .title(&title)
         .link("https://elm-greenwood.com")
         .description(format!("{} from elm-greenwood.com", &title))
@@ -47,29 +53,23 @@ fn channel_title(query: &HashMap<String, String>, release: &Release) -> String {
         Release::Minor => "minor releases",
         Release::Patch => "patch releases",
     };
-    let pkgs =
-        query
-        .iter()
-        .fold(vec![], |mut pkgs, (author,names)| {
-            if author != "_search" {
-                pkgs.push(format!("{}/{}", author, str::replace(names, " ", "+")));
-            }
-            pkgs
-        });
+    let pkgs = query.iter().fold(vec![], |mut pkgs, (author, names)| {
+        if author != "_search" {
+            pkgs.push(format!("{}/{}", author, str::replace(names, " ", "+")));
+        }
+        pkgs
+    });
 
     match (pkgs.is_empty(), query.get("_search")) {
-        (true, None) => {
-            format!("Elm packages {}", &release_type)
-        },
-        (true, Some(pattern)) => {
-            format!("Elm packages {} matching {}", &release_type, pattern)
-        },
-        (false, None) => {
-            format!("Elm packages {} of {}", &release_type, pkgs.join(", "))
-        },
-        (false, Some(pattern)) => {
-            format!("Elm packages {} of {} or matching {}", &release_type, pkgs.join(", "), pattern)
-        },
+        (true, None) => format!("Elm packages {}", &release_type),
+        (true, Some(pattern)) => format!("Elm packages {} matching {}", &release_type, pattern),
+        (false, None) => format!("Elm packages {} of {}", &release_type, pkgs.join(", ")),
+        (false, Some(pattern)) => format!(
+            "Elm packages {} of {} or matching {}",
+            &release_type,
+            pkgs.join(", "),
+            pattern
+        ),
     }
 }
 
@@ -107,6 +107,7 @@ fn item(package: &Package) -> Result<Item, String> {
         .description(package.summary.to_string())
         .comments(item_comments(package))
         .categories(item_categories(package))
+        .content(item_content(package))
         .build()
 }
 
@@ -185,4 +186,34 @@ where
     } else {
         string
     }
+}
+
+fn item_content(package: &Package) -> String {
+    let version = format!("{}.{}.{}", package.major, package.minor, package.patch);
+    let dependencies: HashMap<String, String> =
+        serde_json::from_str(&package.dependencies).unwrap_or(HashMap::new());
+    format!(
+        r#"
+<img src="https://github.com/{author}.png?size=128"/>
+<p>{description}</p>
+<p>
+ <strong>elm: </strong>{elm_version}<br>
+ <strong>Github: </strong> <a href="https://github.com/{author}/{name}/tree/{version}">tree/{version}</a>
+ <br>
+ <strong>License: </strong><a href="https://spdx.org/licenses/{license}">{license}</a>
+</p>
+<p><strong>Dependencies: </strong><br>{dependencies}</p>
+"#,
+        author = package.author,
+        name = package.name,
+        version = version,
+        description = package.summary,
+        license = package.license,
+        elm_version = package.elm_version,
+        dependencies = dependencies
+            .into_iter()
+            .map(|(pkg, constraint)| format!("{} {}", pkg, constraint))
+            .collect::<Vec<String>>()
+            .join("<br>")
+    )
 }
