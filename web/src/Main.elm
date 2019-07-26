@@ -981,7 +981,7 @@ update msg model =
             ( model, Nav.pushUrl model.navKey ("/last?_search=" ++ model.search) )
 
         TimeChanged now ->
-            ( { model | now = now }, getRss model.url )
+            ( { model | now = now }, Cmd.none )
 
         UpdateRequested ->
             ( model, getRss model.url )
