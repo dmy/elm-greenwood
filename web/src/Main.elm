@@ -423,7 +423,7 @@ viewTruncatedListWarning page =
                 Ui.paragraph
                     [ Font.size theme.font.size.m ]
                     [ Ui.text "The maximum number of releases has been returned,"
-                    , Ui.text " some older ones may be missing."
+                    , Ui.text " older ones are not listed."
                     ]
 
             else
