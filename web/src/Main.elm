@@ -292,8 +292,7 @@ viewHeader model =
 viewSearchBox : String -> Ui.Element Msg
 viewSearchBox input =
     Input.text
-        [ Input.focusedOnLoad
-        , Border.rounded 0
+        [ Border.rounded 0
         , Border.color theme.searchBox
         , Border.width 1
         , Ui.paddingEach
