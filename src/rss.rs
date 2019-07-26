@@ -198,7 +198,7 @@ fn item_content(package: &Package) -> String {
 <p>{description}</p>
 <p>
  <strong>elm: </strong>{elm_version}<br>
- <strong>Github: </strong> <a href="https://github.com/{author}/{name}/tree/{version}">tree/{version}</a>
+ <strong>GitHub: </strong> <a href="https://github.com/{author}/{name}/tree/{version}">tree/{version}</a>
  <br>
  <strong>License: </strong><a href="https://spdx.org/licenses/{license}">{license}</a>
 </p>
