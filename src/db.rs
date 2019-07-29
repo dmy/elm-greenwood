@@ -1,5 +1,6 @@
 use crate::release::Release;
 use diesel::dsl::*;
+use diesel::expression::SqlLiteral;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
 use diesel::sqlite::SqliteConnection;
@@ -28,6 +29,55 @@ pub fn count_packages(conn: &SqliteConnection) -> i64 {
         .expect("Can't count packages from database")
 }
 
+pub fn has_old_package_versions(
+    conn: &SqliteConnection,
+    repo: &String,
+    versions: &Vec<String>,
+) -> bool {
+    let count: i64 = packages
+        .select(count_star())
+        .filter(author.concat("/").concat(name).eq(repo))
+        .filter(concat_version().eq_any(versions))
+        .filter(
+            (elm_version.like("0.14%"))
+                .or(elm_version.like("0.15%"))
+                .or(elm_version.like("0.16%"))
+                .or(elm_version.like("0.17%"))
+                .or(elm_version.like("0.18%")),
+        )
+        .first(conn)
+        .expect("Can't check old package versions from database");
+
+    count as usize == versions.len()
+}
+
+pub fn has_old_package_version(conn: &SqliteConnection, repo: &String, version: &String) -> bool {
+    let count: i64 = packages
+        .select(count_star())
+        .filter(author.concat("/").concat(name).eq(repo))
+        .filter(concat_version().eq(version))
+        .filter(
+            (elm_version.like("0.14%"))
+                .or(elm_version.like("0.15%"))
+                .or(elm_version.like("0.16%"))
+                .or(elm_version.like("0.17%"))
+                .or(elm_version.like("0.18%")),
+        )
+        .first(conn)
+        .expect("Can't check old package version from database");
+
+    count == 1
+}
+
+fn concat_version() -> SqlLiteral<Text> {
+    sql::<Text>(
+        r#"(
+        CAST(major as TEXT) || "." ||
+        CAST(minor as TEXT) || "." ||
+        CAST(patch as TEXT))"#,
+    )
+}
+
 pub fn save_package(conn: &SqliteConnection, pkg: &NewPackage) {
     diesel::insert_into(packages::table)
         .values(pkg)
@@ -43,15 +93,13 @@ pub fn last_packages(
 ) -> Vec<Package> {
     let pattern = filter.remove("_search").map(|s| format!("%{}%", s));
     let pkgs = query_packages(conn, &filter);
-    let mut query = packages
-        .order(timestamp.desc())
-        .limit(limit)
-        .into_boxed();
-
+    let mut query = packages.order(timestamp.desc()).limit(limit).into_boxed();
 
     let pkg_filter = author.concat("/").concat(name).eq_any(&pkgs);
     let search_filter = |pattern| {
-        (author.concat("/").concat(name)).like(pattern).or(summary.like(pattern))
+        (author.concat("/").concat(name))
+            .like(pattern)
+            .or(summary.like(pattern))
     };
 
     query = match (filter.is_empty(), &pattern) {
@@ -63,7 +111,9 @@ pub fn last_packages(
 
     query = match release {
         Release::Any => query,
-        Release::Last => query.group_by(sql::<Text>("author,name,elm_version HAVING MAX(timestamp)")),
+        Release::Last => {
+            query.group_by(sql::<Text>("author,name,elm_version HAVING MAX(timestamp)"))
+        }
         Release::First => query.filter(major.eq(1).and(minor.eq(0)).and(patch.eq(0))),
         Release::Major => query.filter(minor.eq(0).and(patch.eq(0))),
         Release::Minor => query.filter(minor.ne(0).and(patch.eq(0))),

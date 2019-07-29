@@ -29,8 +29,11 @@ fn main() -> syslog::Result<()> {
     log::info!("Using {} database", db_url);
 
     thread::spawn(|| loop {
-        update_packages();
-        thread::sleep(Duration::from_secs(60));
+        update_outcast_packages();
+        for _ in 0..60 {
+            update_packages();
+            thread::sleep(Duration::from_secs(60));
+        }
     });
 
     let get_rss = rss_packages(None, &Release::Any);
@@ -70,11 +73,23 @@ pub fn update_packages() {
 
     if pkgs_count == 0 {
         log::info!("Retrieving all packages");
-        elm::all_packages::map(save);
+        elm::packages::map(save);
     } else {
         log::info!("Updating packages since {}", pkgs_count);
-        elm::all_packages::map_since(save, pkgs_count);
+        elm::packages::map_since(save, pkgs_count);
     }
+}
+
+/// 0.18 packages published after 0.19.0 release are ignored by the packages API.
+pub fn update_outcast_packages() {
+    let conn = db::connect();
+    let save = |pkg: &NewPackage| {
+        log::info!("Adding old {:?}", pkg);
+        db::save_package(&conn, pkg);
+    };
+
+    log::info!("Updating old packages");
+    elm::old_packages::map(save, &conn);
 }
 
 fn rss_packages(
