@@ -119,14 +119,14 @@ fn item_title(package: &Package) -> String {
 }
 
 fn item_link(package: &Package) -> String {
+    let elm_version = &package.elm_version[..4];
+    let host = match elm_version {
+        "0.19" => "package.elm-lang.org",
+        _ => "old.elm.dmy.fr",
+    };
     format!(
-        "{}/packages/{}/{}/{}.{}.{}/",
-        elm::PACKAGES_URL,
-        package.author,
-        package.name,
-        package.major,
-        package.minor,
-        package.patch
+        "https://{}/packages/{}/{}/{}.{}.{}/",
+        host, package.author, package.name, package.major, package.minor, package.patch
     )
 }
 
