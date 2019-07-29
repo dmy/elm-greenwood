@@ -15,8 +15,14 @@ struct Json {
     dependencies: HashMap<String, String>,
 }
 
-fn map_package<F>(f: F, pkg: &str, version: &str, elm: &Result<Json, ()>, timestamp: &Option<&i64>)
-where
+fn map_package<F>(
+    f: F,
+    format: i32,
+    pkg: &str,
+    version: &str,
+    elm: &Result<Json, ()>,
+    timestamp: &Option<&i64>,
+) where
     F: Fn(&NewPackage),
 {
     let repo: Vec<&str> = pkg.split('/').collect();
@@ -50,6 +56,7 @@ where
             license: &elm.license,
             elm_version: &elm.elm_version,
             dependencies: &serde_json::json!(elm.dependencies).to_string(),
+            format: format,
         };
         f(&package);
     } else {

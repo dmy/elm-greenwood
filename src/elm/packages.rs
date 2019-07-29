@@ -23,7 +23,7 @@ where
         let releases = releases(&client, &pkg);
         for version in versions {
             let elm = elm(&client, &pkg, &version);
-            super::map_package(&f, &pkg, &version, &elm, &releases.get(&version));
+            super::map_package(&f, 19, &pkg, &version, &elm, &releases.get(&version));
         }
     }
 }
@@ -50,7 +50,7 @@ where
         if let [repo, version] = &fields[..] {
             let releases = releases(&client, &repo);
             let elm = elm(&client, &repo, version);
-            super::map_package(&f, &repo, &version, &elm, &releases.get(*version));
+            super::map_package(&f, 19, &repo, &version, &elm, &releases.get(*version));
         }
     }
 }

@@ -11,5 +11,6 @@ table! {
         license -> Text,
         elm_version -> Text,
         dependencies -> Text,
+        format -> Integer,
     }
 }

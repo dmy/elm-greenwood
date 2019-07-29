@@ -1,5 +1,15 @@
 use super::schema::packages;
 
+/// Formats:
+/// 19: elm.json
+///     Some older packages have been converted  on official server, but not all.
+/// 15: elm-package.json, including "elm-version"
+///     Some older packages have been converted  on official server, but not all.
+/// 14: elm-package.json, without "elm-version"
+/// 13: elm_dependencies.json, the file does not seem to exist on the server
+///     The packages in this format are not saved for now and produce an error
+///     in the logs because of the missing "elm-version" field.
+
 #[derive(Queryable)]
 pub struct Package {
     pub id: i32,
@@ -13,6 +23,7 @@ pub struct Package {
     pub license: String,
     pub elm_version: String,
     pub dependencies: String,
+    pub format: i32,
 }
 
 #[derive(Insertable, Debug)]
@@ -28,4 +39,5 @@ pub struct NewPackage<'a> {
     pub license: &'a str,
     pub elm_version: &'a str,
     pub dependencies: &'a str,
+    pub format: i32,
 }

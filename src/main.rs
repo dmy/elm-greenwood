@@ -29,8 +29,9 @@ fn main() -> syslog::Result<()> {
     log::info!("Using {} database", db_url);
 
     thread::spawn(|| loop {
+        update_packages();
         update_outcast_packages();
-        for _ in 0..60 {
+        for _ in 0..59 {
             update_packages();
             thread::sleep(Duration::from_secs(60));
         }
@@ -65,11 +66,8 @@ fn main() -> syslog::Result<()> {
 
 pub fn update_packages() {
     let conn = db::connect();
-    let pkgs_count = db::count_packages(&conn);
-    let save = |pkg: &NewPackage| {
-        log::info!("Adding {:?}", pkg);
-        db::save_package(&conn, pkg);
-    };
+    let pkgs_count = db::count_packages(&conn, 19);
+    let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
 
     if pkgs_count == 0 {
         log::info!("Retrieving all packages");
@@ -80,13 +78,11 @@ pub fn update_packages() {
     }
 }
 
-/// 0.18 packages published after 0.19.0 release are ignored by the packages API.
+/// 0.18 packages published after 0.19.0 release and some older
+/// ones are ignored by the packages API released with 0.19.0.
 pub fn update_outcast_packages() {
     let conn = db::connect();
-    let save = |pkg: &NewPackage| {
-        log::info!("Adding old {:?}", pkg);
-        db::save_package(&conn, pkg);
-    };
+    let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
 
     log::info!("Updating old packages");
     elm::old_packages::map(save, &conn);

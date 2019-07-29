@@ -34,7 +34,7 @@ where
             for version in pkg.versions {
                 if !db::has_old_package_version(conn, &pkg.name, &version) {
                     let (elm, timestamp) = elm_package(&client, &pkg.name, &version);
-                    super::map_package(&f, &pkg.name, &version, &elm, &timestamp.as_ref());
+                    super::map_package(&f, 15, &pkg.name, &version, &elm, &timestamp.as_ref());
                 }
             }
         }

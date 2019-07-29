@@ -22,9 +22,10 @@ pub fn connect() -> SqliteConnection {
     SqliteConnection::establish(&db_url).expect(&format!("Error connecting to {}", db_url))
 }
 
-pub fn count_packages(conn: &SqliteConnection) -> i64 {
+pub fn count_packages(conn: &SqliteConnection, pkg_format: i32) -> i64 {
     packages
         .select(count_star())
+        .filter(format.eq(pkg_format))
         .get_result(conn)
         .expect("Can't count packages from database")
 }
@@ -39,7 +40,9 @@ pub fn has_old_package_versions(
         .filter(author.concat("/").concat(name).eq(repo))
         .filter(concat_version().eq_any(versions))
         .filter(
-            (elm_version.like("0.14%"))
+            format
+                .eq(15)
+                .or(elm_version.like("0.14%"))
                 .or(elm_version.like("0.15%"))
                 .or(elm_version.like("0.16%"))
                 .or(elm_version.like("0.17%"))
@@ -57,7 +60,9 @@ pub fn has_old_package_version(conn: &SqliteConnection, repo: &String, version: 
         .filter(author.concat("/").concat(name).eq(repo))
         .filter(concat_version().eq(version))
         .filter(
-            (elm_version.like("0.14%"))
+            format
+                .eq(15)
+                .or(elm_version.like("0.14%"))
                 .or(elm_version.like("0.15%"))
                 .or(elm_version.like("0.16%"))
                 .or(elm_version.like("0.17%"))
@@ -66,7 +71,7 @@ pub fn has_old_package_version(conn: &SqliteConnection, repo: &String, version: 
         .first(conn)
         .expect("Can't check old package version from database");
 
-    count == 1
+    count > 0
 }
 
 fn concat_version() -> SqlLiteral<Text> {
@@ -79,6 +84,7 @@ fn concat_version() -> SqlLiteral<Text> {
 }
 
 pub fn save_package(conn: &SqliteConnection, pkg: &NewPackage) {
+    log::info!("Adding {:?}", pkg);
     diesel::insert_into(packages::table)
         .values(pkg)
         .execute(conn)
