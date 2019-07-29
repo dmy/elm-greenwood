@@ -234,12 +234,21 @@ image pkg =
 
 doc : Package -> String
 doc pkg =
-    String.join "/"
-        [ "https://package.elm-lang.org/packages"
-        , pkg.author
-        , pkg.name
-        , pkg.version
-        ]
+    if usesOldPackageSyntax pkg then
+        String.join "/"
+            [ "https://old.elm.dmy.fr/packages"
+            , pkg.author
+            , pkg.name
+            , pkg.version
+            ]
+
+    else
+        String.join "/"
+            [ "https://package.elm-lang.org/packages"
+            , pkg.author
+            , pkg.name
+            , pkg.version
+            ]
 
 
 github : Package -> String
@@ -260,21 +269,31 @@ releases pkg =
 
 install : Package -> String
 install pkg =
-    let
-        minElmVersion =
-            String.slice 4 8 pkg.elmVersion
-    in
-    if Set.member minElmVersion oldSyntaxVersions then
+    if usesOldPackageSyntax pkg then
         "elm-package install " ++ pkg.author ++ "/" ++ pkg.name
 
     else
         "elm install " ++ pkg.author ++ "/" ++ pkg.name
 
 
+usesOldPackageSyntax : Package -> Bool
+usesOldPackageSyntax pkg =
+    let
+        minElmVersion =
+            String.slice 4 8 pkg.elmVersion
+    in
+    if Set.member minElmVersion oldSyntaxVersions then
+        True
+
+    else
+        False
+
+
 oldSyntaxVersions : Set String
 oldSyntaxVersions =
     Set.fromList
         [ "0.14"
+        , "0.14"
         , "0.15"
         , "0.16"
         , "0.17"
