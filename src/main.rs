@@ -33,23 +33,27 @@ fn main() -> syslog::Result<()> {
         thread::sleep(Duration::from_secs(60));
     });
 
-    let rss = rss_packages(None, &Release::Any);
-    let rss_last = rss_packages(Some("last"), &Release::Last);
-    let rss_first = rss_packages(Some("first"), &Release::First);
-    let rss_major = rss_packages(Some("major"), &Release::Major);
-    let rss_minor = rss_packages(Some("minor"), &Release::Minor);
-    let rss_patch = rss_packages(Some("patch"), &Release::Patch);
+    let get_rss = rss_packages(None, &Release::Any);
+    let get_rss_last = rss_packages(Some("last"), &Release::Last);
+    let get_rss_first = rss_packages(Some("first"), &Release::First);
+    let get_rss_major = rss_packages(Some("major"), &Release::Major);
+    let get_rss_minor = rss_packages(Some("minor"), &Release::Minor);
+    let get_rss_patch = rss_packages(Some("patch"), &Release::Patch);
+
+    // we should set the date with the more recent pubDate
+    let head_rss = warp::head().and(warp::path(".rss")).map(warp::reply);
 
     let default = warp::any().and(warp::fs::file(format!("{}/index.html", www_root)));
-    let public = warp::get2().and(warp::fs::dir(www_root));
+    let get_static = warp::get2().and(warp::fs::dir(www_root));
 
-    let routes = rss
-        .or(rss_last)
-        .or(rss_first)
-        .or(rss_major)
-        .or(rss_minor)
-        .or(rss_patch)
-        .or(public)
+    let routes = get_rss
+        .or(get_rss_last)
+        .or(get_rss_first)
+        .or(get_rss_major)
+        .or(get_rss_minor)
+        .or(get_rss_patch)
+        .or(head_rss)
+        .or(get_static)
         .or(default);
 
     warp::serve(routes).run(([127, 0, 0, 1], 4242));
