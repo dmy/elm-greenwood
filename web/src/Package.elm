@@ -2,7 +2,6 @@ module Package exposing
     ( Package
     , Release(..)
     , dependencies
-    , doc
     , fromRssItem
     , github
     , id
@@ -27,6 +26,7 @@ type alias Package =
     , release : Release
     , summary : String
     , timestamp : Time.Posix
+    , doc : String
     , elmVersion : String
     , license : String
     , dependencies : List String
@@ -56,6 +56,7 @@ fromRssItem item =
         |> from (release item)
         |> from (description item)
         |> from (Rss.Item.pubDate item)
+        |> from (Rss.Item.link item)
         |> from (elmVersion item)
         |> from (license item)
         |> from (Just <| dependencies item)
@@ -230,25 +231,6 @@ withDomain domain category =
 image : Package -> String
 image pkg =
     "https://github.com/" ++ pkg.author ++ ".png" ++ "?size=32"
-
-
-doc : Package -> String
-doc pkg =
-    if usesOldPackageSyntax pkg then
-        String.join "/"
-            [ "https://old.elm.dmy.fr/packages"
-            , pkg.author
-            , pkg.name
-            , pkg.version
-            ]
-
-    else
-        String.join "/"
-            [ "https://package.elm-lang.org/packages"
-            , pkg.author
-            , pkg.name
-            , pkg.version
-            ]
 
 
 github : Package -> String

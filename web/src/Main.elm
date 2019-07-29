@@ -787,7 +787,7 @@ viewDetails pkg =
                 , image = Ui.el [ Ui.width (Ui.px 32) ] (Icon.logo 32)
                 }
             , link
-                { url = Package.doc pkg
+                { url = pkg.doc
                 , label = "Documentation"
                 , image = linkImage { url = "/elm.png", label = "Elm Packages" }
                 }
