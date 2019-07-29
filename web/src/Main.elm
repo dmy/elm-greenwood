@@ -72,7 +72,7 @@ type Msg
     | SearchInputChanged String
     | SearchRequested
     | TimeChanged Time.Posix
-    | UpdateRequested
+    | UpdateRequested Time.Posix
     | UrlChanged Url
     | UrlRequested UrlRequest
     | WindowResized Int Int
@@ -983,8 +983,8 @@ update msg model =
         TimeChanged now ->
             ( { model | now = now }, Cmd.none )
 
-        UpdateRequested ->
-            ( model, getRss model.url )
+        UpdateRequested now ->
+            ( { model | now = now }, getRss model.url )
 
         UrlRequested urlRequest ->
             case urlRequest of
@@ -1027,7 +1027,7 @@ toggle id set =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every (5 * 60 * 1000) (always UpdateRequested)
+        [ Time.every (5 * 60 * 1000) UpdateRequested
         , Time.every (60 * 1000) TimeChanged
         , Browser.Events.onResize WindowResized
         ]
