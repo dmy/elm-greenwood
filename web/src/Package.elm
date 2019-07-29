@@ -1,15 +1,23 @@
 module Package exposing
     ( Package
     , Release(..)
+    , author
     , dependencies
+    , doc
+    , elmVersion
     , fromRssItem
     , github
-    , id
+    , guid
     , image
     , install
+    , license
+    , name
+    , release
     , releaseTag
     , releases
+    , summary
     , time
+    , version
     )
 
 import DateFormat
@@ -19,8 +27,13 @@ import Set exposing (Set)
 import Time
 
 
-type alias Package =
-    { author : String
+type Package
+    = Package Package_
+
+
+type alias Package_ =
+    { guid : String
+    , author : String
     , name : String
     , version : String
     , release : Release
@@ -49,17 +62,19 @@ type Release
 
 fromRssItem : Rss.Item -> Maybe Package
 fromRssItem item =
-    Just Package
-        |> from (author item)
-        |> from (name item)
-        |> from (version item)
-        |> from (release item)
+    Just Package_
+        |> from (Rss.Item.guid item)
+        |> from (rssAuthor item)
+        |> from (rssName item)
+        |> from (rssVersion item)
+        |> from (rssRelease item)
         |> from (description item)
         |> from (Rss.Item.pubDate item)
         |> from (Rss.Item.link item)
-        |> from (elmVersion item)
-        |> from (license item)
-        |> from (Just <| dependencies item)
+        |> from (rssElmVersion item)
+        |> from (rssLicense item)
+        |> from (Just <| rssDependencies item)
+        |> Maybe.map Package
 
 
 from : Maybe a -> Maybe (a -> b) -> Maybe b
@@ -67,26 +82,43 @@ from =
     Maybe.map2 (|>)
 
 
-id : Package -> String
-id pkg =
-    pkg.author ++ pkg.name ++ pkg.version
+rssAuthor : Rss.Item -> Maybe String
+rssAuthor item =
+    Rss.Item.title item
+        |> Maybe.andThen (String.split "/" >> List.head)
 
 
-name : Rss.Item -> Maybe String
-name item =
+rssElmVersion : Rss.Item -> Maybe String
+rssElmVersion item =
+    Rss.Item.categories item
+        |> List.filterMap (withDomain "elm")
+        |> List.head
+
+
+rssLicense : Rss.Item -> Maybe String
+rssLicense item =
+    Rss.Item.categories item
+        |> List.filterMap (withDomain "license")
+        |> List.head
+
+
+rssName : Rss.Item -> Maybe String
+rssName item =
     Rss.Item.title item
         |> Maybe.andThen (String.words >> List.head)
         |> Maybe.andThen (String.split "/" >> List.drop 1 >> List.head)
 
 
-author : Rss.Item -> Maybe String
-author item =
-    Rss.Item.title item
-        |> Maybe.andThen (String.split "/" >> List.head)
+rssRelease : Rss.Item -> Maybe Release
+rssRelease item =
+    item
+        |> rssVersion
+        |> Maybe.andThen semVer
+        |> Maybe.map semVerRelease
 
 
-version : Rss.Item -> Maybe String
-version item =
+rssVersion : Rss.Item -> Maybe String
+rssVersion item =
     case Maybe.map (String.split " ") (Rss.Item.title item) of
         Just [ _, version_ ] ->
             Just version_
@@ -95,12 +127,29 @@ version item =
             Nothing
 
 
-release : Rss.Item -> Maybe Release
-release item =
-    item
-        |> version
-        |> Maybe.andThen semVer
-        |> Maybe.map semVerRelease
+author : Package -> String
+author (Package pkg) =
+    pkg.author
+
+
+rssDependencies : Rss.Item -> List String
+rssDependencies item =
+    Rss.Item.categories item
+        |> List.filterMap (withDomain "dependency")
+
+
+withDomain : String -> Rss.Item.Category -> Maybe String
+withDomain domain category =
+    if category.domain == Just domain then
+        Just category.location
+
+    else
+        Nothing
+
+
+dependencies : Package -> List String
+dependencies (Package pkg) =
+    pkg.dependencies
 
 
 description : Rss.Item -> Maybe String
@@ -108,6 +157,72 @@ description item =
     Rss.Item.description item
         |> Maybe.map String.lines
         |> Maybe.andThen List.head
+
+
+doc : Package -> String
+doc (Package pkg) =
+    pkg.doc
+
+
+elmVersion : Package -> String
+elmVersion (Package pkg) =
+    pkg.elmVersion
+
+
+guid : Package -> String
+guid (Package pkg) =
+    pkg.guid
+
+
+image : Package -> String
+image (Package pkg) =
+    "https://github.com/" ++ pkg.author ++ ".png" ++ "?size=32"
+
+
+install : Package -> String
+install (Package pkg) =
+    if usesOldPackageSyntax pkg then
+        "elm-package install " ++ pkg.author ++ "/" ++ pkg.name
+
+    else
+        "elm install " ++ pkg.author ++ "/" ++ pkg.name
+
+
+github : Package -> String
+github (Package pkg) =
+    String.join "/"
+        [ "https://github.com"
+        , pkg.author
+        , pkg.name
+        , "tree"
+        , pkg.version
+        ]
+
+
+license : Package -> String
+license (Package pkg) =
+    pkg.license
+
+
+name : Package -> String
+name (Package pkg) =
+    pkg.name
+
+
+releaseTag : Release -> String
+releaseTag pkgRelease =
+    case pkgRelease of
+        New ->
+            "new"
+
+        Major ->
+            "major"
+
+        Minor ->
+            "minor"
+
+        Patch ->
+            "patch"
 
 
 semVer : String -> Maybe SemVer
@@ -135,8 +250,13 @@ semVerRelease v =
         Patch
 
 
+summary : Package -> String
+summary (Package pkg) =
+    pkg.summary
+
+
 time : Time.Zone -> Time.Posix -> Package -> String
-time tz now pkg =
+time tz now (Package pkg) =
     let
         seconds =
             (Time.posixToMillis now - Time.posixToMillis pkg.timestamp) // 1000
@@ -183,82 +303,17 @@ time tz now pkg =
             pkg.timestamp
 
 
-releaseTag : Release -> String
-releaseTag pkgRelease =
-    case pkgRelease of
-        New ->
-            "new"
-
-        Major ->
-            "major"
-
-        Minor ->
-            "minor"
-
-        Patch ->
-            "patch"
-
-
-elmVersion : Rss.Item -> Maybe String
-elmVersion item =
-    Rss.Item.categories item
-        |> List.filterMap (withDomain "elm")
-        |> List.head
-
-
-license : Rss.Item -> Maybe String
-license item =
-    Rss.Item.categories item
-        |> List.filterMap (withDomain "license")
-        |> List.head
-
-
-dependencies : Rss.Item -> List String
-dependencies item =
-    Rss.Item.categories item
-        |> List.filterMap (withDomain "dependency")
-
-
-withDomain : String -> Rss.Item.Category -> Maybe String
-withDomain domain category =
-    if category.domain == Just domain then
-        Just category.location
-
-    else
-        Nothing
-
-
-image : Package -> String
-image pkg =
-    "https://github.com/" ++ pkg.author ++ ".png" ++ "?size=32"
-
-
-github : Package -> String
-github pkg =
-    String.join "/"
-        [ "https://github.com"
-        , pkg.author
-        , pkg.name
-        , "tree"
-        , pkg.version
-        ]
+release : Package -> Release
+release (Package pkg) =
+    pkg.release
 
 
 releases : Package -> String
-releases pkg =
+releases (Package pkg) =
     "/?" ++ pkg.author ++ "=" ++ pkg.name
 
 
-install : Package -> String
-install pkg =
-    if usesOldPackageSyntax pkg then
-        "elm-package install " ++ pkg.author ++ "/" ++ pkg.name
-
-    else
-        "elm install " ++ pkg.author ++ "/" ++ pkg.name
-
-
-usesOldPackageSyntax : Package -> Bool
+usesOldPackageSyntax : Package_ -> Bool
 usesOldPackageSyntax pkg =
     let
         minElmVersion =
@@ -281,3 +336,8 @@ oldSyntaxVersions =
         , "0.17"
         , "0.18"
         ]
+
+
+version : Package -> String
+version (Package pkg) =
+    pkg.version

@@ -539,7 +539,7 @@ viewPackage : Model -> Package -> ( String, Ui.Element Msg )
 viewPackage model pkg =
     let
         id =
-            Package.id pkg
+            Package.guid pkg
 
         unfolded =
             Set.member id model.unfolded
@@ -628,7 +628,7 @@ viewPackageHeader pkg unfolded =
         , attrIf unfolded <|
             \_ -> Ui.pointer
         , attrIf unfolded <|
-            \_ -> Events.onClick (PackageClicked <| Package.id pkg)
+            \_ -> Events.onClick (PackageClicked <| Package.guid pkg)
         ]
         [ Ui.wrappedRow
             [ Ui.spacing theme.space.l
@@ -667,7 +667,7 @@ viewContent pkg unfolded =
             , Font.color theme.black
             ]
             [ Ui.el [ Ui.width Ui.fill ]
-                (Ui.text pkg.elmVersion)
+                (Ui.text <| Package.elmVersion pkg)
             , viewLicense pkg unfolded
             ]
         ]
@@ -681,12 +681,12 @@ viewLicense pkg unfolded =
             , Ui.mouseOver
                 [ Font.color theme.overLink ]
             ]
-            { url = "https://spdx.org/licenses/" ++ pkg.license
-            , label = Ui.text pkg.license
+            { url = "https://spdx.org/licenses/" ++ Package.license pkg
+            , label = Ui.text (Package.license pkg)
             }
 
     else
-        Ui.el [] (Ui.text pkg.license)
+        Ui.el [] (Ui.text <| Package.license pkg)
 
 
 viewSummary : Package -> Bool -> Ui.Element msg
@@ -699,7 +699,7 @@ viewSummary pkg unfolded =
             [ Ui.alignTop
             , Ui.spacing theme.space.s
             ]
-            [ Ui.text pkg.summary
+            [ Ui.text (Package.summary pkg)
             ]
         , viewImage pkg unfolded
         ]
@@ -716,14 +716,15 @@ viewImage pkg unfolded =
                 , Font.color (Ui.rgba 0 0 0 0)
                 ]
                 { src = Package.image pkg
-                , description = pkg.author
+                , description = Package.author pkg
                 }
     in
     if unfolded then
         Ui.link
-            [ Ui.htmlAttribute (title (pkg.author ++ " last releases"))
+            [ Ui.htmlAttribute
+                (title (Package.author pkg ++ " last releases"))
             ]
-            { url = "/last?" ++ pkg.author ++ "=*"
+            { url = "/last?" ++ Package.author pkg ++ "=*"
             , label = img
             }
 
@@ -734,12 +735,12 @@ viewImage pkg unfolded =
 viewName : Package -> Ui.Element msg
 viewName pkg =
     Ui.paragraph [ Ui.width Ui.fill ]
-        [ Ui.text <| pkg.author ++ "/" ++ pkg.name ]
+        [ Ui.text <| Package.author pkg ++ "/" ++ Package.name pkg ]
 
 
 viewVersion : Package -> Ui.Element msg
 viewVersion pkg =
-    Ui.text pkg.version
+    Ui.text (Package.version pkg)
 
 
 viewTag : Package -> Ui.Element msg
@@ -761,7 +762,7 @@ viewTag pkg =
             , Font.semiBold
             , Border.shadow theme.shadow
             ]
-            (Ui.text (Package.releaseTag pkg.release))
+            (Ui.text (Package.releaseTag <| Package.release pkg))
         )
 
 
@@ -787,13 +788,13 @@ viewDetails pkg =
                 , image = Ui.el [ Ui.width (Ui.px 32) ] (Icon.logo 32)
                 }
             , link
-                { url = pkg.doc
+                { url = Package.doc pkg
                 , label = "Documentation"
                 , image = linkImage { url = "/elm.png", label = "Elm Packages" }
                 }
             ]
         , viewInstall pkg
-        , viewIf (not (List.isEmpty pkg.dependencies)) <|
+        , viewIf (not (List.isEmpty <| Package.dependencies pkg)) <|
             \_ -> viewDependencies pkg
         ]
 
@@ -847,9 +848,7 @@ viewInstall pkg =
                 ]
             ]
             [ Ui.el [ Ui.width Ui.fill, Ui.scrollbarX ] <|
-                Ui.html <|
-                    Html.pre [ Html.Attributes.id (Package.id pkg) ]
-                        [ Html.text (Package.install pkg) ]
+                Ui.html (Html.pre [] [ Html.text (Package.install pkg) ])
             , Ui.el
                 [ Font.color theme.dark
                 , Ui.width (Ui.px theme.space.xl)
@@ -883,7 +882,7 @@ viewDependencies pkg =
             , Ui.paddingEach { edges | bottom = theme.space.s }
             ]
             (Ui.text "Dependencies:")
-            :: List.map viewDependency (List.sort pkg.dependencies)
+            :: List.map viewDependency (List.sort <| Package.dependencies pkg)
 
 
 viewDependency : String -> Ui.Element msg
@@ -924,7 +923,7 @@ edges =
 
 headerFontWeight : Package -> Ui.Attribute msg
 headerFontWeight pkg =
-    case pkg.release of
+    case Package.release pkg of
         Package.Patch ->
             Font.regular
 
@@ -934,7 +933,7 @@ headerFontWeight pkg =
 
 headerColor : Package -> Ui.Color
 headerColor pkg =
-    case pkg.release of
+    case Package.release pkg of
         Package.Patch ->
             theme.white
 
@@ -944,7 +943,7 @@ headerColor pkg =
 
 backgroundColor : Package -> Ui.Color
 backgroundColor pkg =
-    case pkg.release of
+    case Package.release pkg of
         Package.New ->
             theme.newRelease
 
