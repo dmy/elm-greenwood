@@ -167,20 +167,26 @@ fn item_comments(package: &Package) -> String {
 }
 
 fn item_categories(package: &Package) -> Vec<Category> {
-    let deps: HashMap<String, String> =
-        serde_json::from_str(&package.dependencies).unwrap_or(HashMap::new());
-
-    let mut categories: Vec<Category> = deps
+    let mut categories: Vec<Category> = serde_json::from_str(&package.dependencies)
+        .unwrap_or(HashMap::new())
         .into_iter()
-        .map(|(pkg, constraint)| dependency(&pkg, &constraint))
+        .map(|(pkg, constraint): (String, String)| dependency(&pkg, &constraint))
         .collect();
-    categories.push(category("elm", &format!("elm {}", &package.elm_version)));
+
+    categories.push(category(
+        "elm",
+        &format!("elm {}", &package.elm_version.replace("<=", "≤")),
+    ));
     categories.push(category("license", &package.license));
+    categories.sort_by(|c1, c2| c1.name().partial_cmp(c2.name()).unwrap());
     categories
 }
 
 fn dependency(pkg: &str, constraint: &str) -> Category {
-    category("dependency", &format!("{} {}", pkg, constraint))
+    category(
+        "dependency",
+        &format!("{} {}", pkg, constraint.replace("<=", "≤")),
+    )
 }
 
 fn category<S>(domain: S, location: S) -> Category
@@ -207,8 +213,15 @@ where
 
 fn item_content(package: &Package) -> String {
     let version = format!("{}.{}.{}", package.major, package.minor, package.patch);
-    let dependencies: HashMap<String, String> =
-        serde_json::from_str(&package.dependencies).unwrap_or(HashMap::new());
+    let mut dependencies: Vec<String> = serde_json::from_str(&package.dependencies)
+        .unwrap_or(HashMap::new())
+        .into_iter()
+        .map(|(pkg, constraint): (String, String)| {
+            format!("{} {}", pkg, constraint.replace("<=", "≤"))
+        })
+        .collect();
+    dependencies.sort();
+
     format!(
         r#"
 <img src="https://github.com/{author}.png?size=128"/>
@@ -226,11 +239,7 @@ fn item_content(package: &Package) -> String {
         version = version,
         description = package.summary,
         license = package.license,
-        elm_version = package.elm_version,
-        dependencies = dependencies
-            .into_iter()
-            .map(|(pkg, constraint)| format!("{} {}", pkg, constraint))
-            .collect::<Vec<String>>()
-            .join("<br>")
+        elm_version = package.elm_version.replace("<=", "≤"),
+        dependencies = dependencies.join("<br>"),
     )
 }
