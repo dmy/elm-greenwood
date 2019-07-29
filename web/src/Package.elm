@@ -54,7 +54,7 @@ fromRssItem item =
         |> from (name item)
         |> from (version item)
         |> from (release item)
-        |> from (Rss.Item.description item)
+        |> from (description item)
         |> from (Rss.Item.pubDate item)
         |> from (elmVersion item)
         |> from (license item)
@@ -100,6 +100,13 @@ release item =
         |> version
         |> Maybe.andThen semVer
         |> Maybe.map semVerRelease
+
+
+description : Rss.Item -> Maybe String
+description item =
+    Rss.Item.description item
+        |> Maybe.map String.lines
+        |> Maybe.andThen List.head
 
 
 semVer : String -> Maybe SemVer

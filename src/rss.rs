@@ -104,7 +104,7 @@ fn item(package: &Package) -> Result<Item, String> {
         .link(item_link(package))
         .guid(item_guid(package))
         .pub_date(item_pub_date(package))
-        .description(package.summary.to_string())
+        .description(item_description(package))
         .comments(item_comments(package))
         .categories(item_categories(package))
         .content(item_content(package))
@@ -140,6 +140,23 @@ fn item_guid(package: &Package) -> Option<Guid> {
 
 fn item_pub_date(package: &Package) -> String {
     Utc.timestamp(package.timestamp, 0).to_rfc2822()
+}
+
+fn item_description(package: &Package) -> String {
+    format!(
+        "{summary}\n<br/>{release} for elm {elm_version}",
+        summary = package.summary.to_string(),
+        release = match (package.major, package.minor, package.patch) {
+            (1, 0, 0) => "New package",
+            (_, 0, 0) => "Major version",
+            (_, _, 0) => "Minor version",
+            _ => "Patch version",
+        },
+        elm_version = package
+            .elm_version
+            .replace("<= v <", "to")
+            .replace("<= v <=", "to"),
+    )
 }
 
 fn item_comments(package: &Package) -> String {
