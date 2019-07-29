@@ -30,6 +30,21 @@ pub fn count_packages(conn: &SqliteConnection, pkg_format: i32) -> i64 {
         .expect("Can't count packages from database")
 }
 
+pub fn has_package_version(conn: &SqliteConnection, pkg: &NewPackage) -> bool {
+    let count: i64 = packages
+        .select(count_star())
+        .filter(author.eq(pkg.author))
+        .filter(name.eq(pkg.name))
+        .filter(major.eq(pkg.major))
+        .filter(minor.eq(pkg.minor))
+        .filter(patch.eq(pkg.patch))
+        .filter(format.eq(pkg.format))
+        .first(conn)
+        .expect("Can't check old package version from database");
+
+    count > 0
+}
+
 pub fn has_old_package_versions(
     conn: &SqliteConnection,
     repo: &String,
@@ -84,6 +99,19 @@ fn concat_version() -> SqlLiteral<Text> {
 }
 
 pub fn save_package(conn: &SqliteConnection, pkg: &NewPackage) {
+    if has_package_version(conn, pkg) {
+        log::error!(
+            "Ignored duplicate package {}/{} {}.{}.{} for {}",
+            pkg.author,
+            pkg.name,
+            pkg.major,
+            pkg.minor,
+            pkg.patch,
+            pkg.elm_version
+        );
+        return;
+    }
+
     log::info!("Adding {:?}", pkg);
     diesel::insert_into(packages::table)
         .values(pkg)
