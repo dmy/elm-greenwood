@@ -11,8 +11,13 @@ struct Json {
     summary: String,
     license: String,
     #[serde(rename = "elm-version")]
+    #[serde(default = "default_elm_version")]
     elm_version: String,
     dependencies: HashMap<String, String>,
+}
+
+fn default_elm_version() -> String {
+    "".to_string()
 }
 
 fn map_package<F>(
@@ -54,9 +59,17 @@ fn map_package<F>(
             name: name,
             summary: &elm.summary,
             license: &elm.license,
-            elm_version: &elm.elm_version,
+            elm_version: match elm.elm_version.as_ref() {
+                // elm-version did not exist for 0.14 and
+                // packages < 0.14 are not listed
+                "" => "0.14.0 <= v < 0.15.0",
+                _ => &elm.elm_version,
+            },
             dependencies: &serde_json::json!(elm.dependencies).to_string(),
-            format: format,
+            format: match elm.elm_version.as_ref() {
+                "" => 14,
+                _ => format,
+            },
         };
         f(&package);
     } else {
