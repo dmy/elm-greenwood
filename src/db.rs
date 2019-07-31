@@ -40,12 +40,12 @@ pub fn has_package_version(conn: &SqliteConnection, pkg: &NewPackage) -> bool {
         .filter(patch.eq(pkg.patch))
         .filter(format.eq(pkg.format))
         .first(conn)
-        .expect("Can't check old package version from database");
+        .expect("Can't check old format package version from database");
 
     count > 0
 }
 
-pub fn has_old_package_versions(
+pub fn has_old_format_package_versions(
     conn: &SqliteConnection,
     repo: &String,
     versions: &Vec<String>,
@@ -56,7 +56,7 @@ pub fn has_old_package_versions(
         .filter(concat_version().eq_any(versions))
         .filter(
             format
-                .eq(15)
+                .lt(19)
                 .or(elm_version.like("0.14%"))
                 .or(elm_version.like("0.15%"))
                 .or(elm_version.like("0.16%"))
@@ -64,12 +64,16 @@ pub fn has_old_package_versions(
                 .or(elm_version.like("0.18%")),
         )
         .first(conn)
-        .expect("Can't check old package versions from database");
+        .expect("Can't check old format package versions from database");
 
     count as usize == versions.len()
 }
 
-pub fn has_old_package_version(conn: &SqliteConnection, repo: &String, version: &String) -> bool {
+pub fn has_old_format_package_version(
+    conn: &SqliteConnection,
+    repo: &String,
+    version: &String,
+) -> bool {
     let count: i64 = packages
         .select(count_star())
         .filter(author.concat("/").concat(name).eq(repo))
@@ -84,7 +88,7 @@ pub fn has_old_package_version(conn: &SqliteConnection, repo: &String, version: 
                 .or(elm_version.like("0.18%")),
         )
         .first(conn)
-        .expect("Can't check old package version from database");
+        .expect("Can't check old format package version from database");
 
     count > 0
 }

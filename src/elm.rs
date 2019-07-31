@@ -1,4 +1,4 @@
-pub mod old_packages;
+pub mod old_format_packages;
 pub mod packages;
 use crate::db::models::NewPackage;
 use serde::Deserialize;

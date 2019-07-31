@@ -24,15 +24,15 @@ where
         .and_then(|mut resp| resp.text())
         .map_err(|err| err.to_string())
         .and_then(|s| serde_json::from_str(&s).map_err(|err| err.to_string()))
-        .map_err(|err| log::error!("can't get old packages: {}", err))
+        .map_err(|err| log::error!("can't get old format packages: {}", err))
         .unwrap_or(vec![]);
 
     for pkg in pkgs {
         // First quickly find missing packages
-        if !db::has_old_package_versions(conn, &pkg.name, &pkg.versions) {
+        if !db::has_old_format_package_versions(conn, &pkg.name, &pkg.versions) {
             // Then find exact version
             for version in pkg.versions {
-                if !db::has_old_package_version(conn, &pkg.name, &version) {
+                if !db::has_old_format_package_version(conn, &pkg.name, &version) {
                     let (elm, timestamp) = elm_package(&client, &pkg.name, &version);
                     super::map_package(&f, 15, &pkg.name, &version, &elm, &timestamp.as_ref());
                 }

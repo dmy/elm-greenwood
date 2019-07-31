@@ -84,8 +84,8 @@ pub fn update_outcast_packages() {
     let conn = db::connect();
     let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
 
-    log::info!("Updating old packages");
-    elm::old_packages::map(save, &conn);
+    log::info!("Updating old format packages");
+    elm::old_format_packages::map(save, &conn);
 }
 
 fn rss_packages(
