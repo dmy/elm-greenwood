@@ -681,7 +681,7 @@ viewLicense pkg unfolded =
             , Ui.mouseOver
                 [ Font.color theme.overLink ]
             ]
-            { url = "https://spdx.org/licenses/" ++ Package.license pkg
+            { url = Package.licenseFile pkg
             , label = Ui.text (Package.license pkg)
             }
 

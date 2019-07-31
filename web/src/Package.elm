@@ -11,6 +11,7 @@ module Package exposing
     , image
     , install
     , license
+    , licenseFile
     , name
     , release
     , releaseTag
@@ -202,6 +203,18 @@ github (Package pkg) =
 license : Package -> String
 license (Package pkg) =
     pkg.license
+
+
+licenseFile : Package -> String
+licenseFile (Package pkg) =
+    String.join "/"
+        [ "https://github.com"
+        , pkg.author
+        , pkg.name
+        , "blob"
+        , pkg.version
+        , "LICENSE"
+        ]
 
 
 name : Package -> String
