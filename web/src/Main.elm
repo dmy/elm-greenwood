@@ -34,6 +34,7 @@ import Xml.Decode as Xml
 type alias Flags =
     { now : Int
     , width : Int
+    , height : Int
     }
 
 
@@ -45,7 +46,7 @@ type alias Model =
     , search : String
     , now : Time.Posix
     , tz : Time.Zone
-    , width : Int
+    , device : Ui.Device
     }
 
 
@@ -98,7 +99,11 @@ init flags url navKey =
       , search = ""
       , now = Time.millisToPosix flags.now
       , tz = Time.utc
-      , width = flags.width
+      , device =
+            Ui.classifyDevice
+                { width = flags.width
+                , height = flags.height
+                }
       }
     , Nav.replaceUrl navKey (Url.toString newUrl)
     )
@@ -559,7 +564,7 @@ viewPackage model pkg =
                     \_ -> Events.onClick (PackageClicked id)
                 ]
                 [ Lazy.lazy2 viewPackageHeader pkg unfolded
-                , Lazy.lazy2 viewContent pkg unfolded
+                , Lazy.lazy3 viewContent model.device pkg unfolded
                 ]
             ]
 
@@ -645,8 +650,8 @@ viewFoldArrow =
     Ui.el [ Ui.alignBottom, Ui.centerX, Ui.moveDown 1 ] Icon.foldArrow
 
 
-viewContent : Package -> Bool -> Ui.Element Msg
-viewContent pkg unfolded =
+viewContent : Ui.Device -> Package -> Bool -> Ui.Element Msg
+viewContent device pkg unfolded =
     Ui.column
         [ Ui.width Ui.fill
         , Background.color theme.white
@@ -657,7 +662,7 @@ viewContent pkg unfolded =
         ]
         [ viewSummary pkg unfolded
         , viewIf unfolded <|
-            \_ -> viewDetails pkg
+            \_ -> viewDetails device pkg
         , Ui.wrappedRow
             [ Ui.spacing theme.space.l
             , Ui.width Ui.fill
@@ -768,8 +773,8 @@ viewTag pkg =
         )
 
 
-viewDetails : Package -> Ui.Element Msg
-viewDetails pkg =
+viewDetails : Ui.Device -> Package -> Ui.Element Msg
+viewDetails device pkg =
     Ui.column
         [ Ui.width Ui.fill
         , Ui.spacing theme.space.l
@@ -797,7 +802,7 @@ viewDetails pkg =
             ]
         , viewInstall pkg
         , viewIf (not (List.isEmpty <| Package.dependencies pkg)) <|
-            \_ -> viewDependencies pkg
+            \_ -> viewDependencies device pkg
         ]
 
 
@@ -876,22 +881,27 @@ copyToClipboardButton pkg =
         }
 
 
-viewDependencies : Package -> Ui.Element msg
-viewDependencies pkg =
+viewDependencies : Ui.Device -> Package -> Ui.Element msg
+viewDependencies device pkg =
     Ui.column [ Ui.spacing theme.space.s ] <|
         Ui.el
             [ Font.semiBold
             , Ui.paddingEach { edges | bottom = theme.space.s }
             ]
             (Ui.text "Dependencies:")
-            :: List.map viewDependency (List.sort <| Package.dependencies pkg)
+            :: List.map (viewDependency device) (List.sort <| Package.dependencies pkg)
 
 
-viewDependency : String -> Ui.Element msg
-viewDependency dep =
+viewDependency : Ui.Device -> String -> Ui.Element msg
+viewDependency device dep =
     case String.split " " dep of
         name :: constraint ->
-            Ui.column
+            (if device.class == Ui.Desktop || device.class == Ui.BigDesktop then
+                Ui.row
+
+             else
+                Ui.column
+            )
                 [ Font.size theme.font.size.xs
                 , Ui.spacing theme.space.s
                 ]
@@ -1009,7 +1019,9 @@ update msg model =
             )
 
         WindowResized width height ->
-            ( { model | width = width }, Cmd.none )
+            ( { model | device = Ui.classifyDevice { width = width, height = height } }
+            , Cmd.none
+            )
 
 
 toggle : String -> Set String -> Set String
