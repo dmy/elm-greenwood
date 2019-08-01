@@ -716,7 +716,11 @@ viewImage pkg unfolded =
                 , Font.color (Ui.rgba 0 0 0 0)
                 ]
                 { src = Package.image pkg
-                , description = Package.author pkg
+
+                -- setting a description here makes the packages
+                -- container scroll horizontally with some white space
+                -- on right on mobile :?
+                , description = ""
                 }
     in
     if unfolded then
