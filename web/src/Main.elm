@@ -273,7 +273,7 @@ viewHeader : Model -> Ui.Element Msg
 viewHeader model =
     Ui.row
         [ Ui.width (Ui.fill |> Ui.maximum 768)
-        , Ui.spacing (model.width // 20)
+        , Ui.spacing theme.space.m
         , Ui.padding theme.space.m
         , Ui.centerX
         ]
@@ -295,11 +295,10 @@ viewSearchBox input =
         [ Border.rounded 0
         , Border.color theme.searchBox
         , Border.width 1
+        , Ui.height (Ui.px theme.space.xl)
         , Ui.paddingEach
             { edges
-                | top = theme.space.m
-                , right = theme.space.xl
-                , bottom = theme.space.m
+                | right = theme.space.xl
                 , left = theme.space.m
             }
         , Font.size theme.font.size.m
@@ -407,7 +406,6 @@ viewLogo =
             Ui.el
                 [ Ui.width (Ui.px 60)
                 , Ui.height (Ui.px 60)
-                , Ui.moveUp 2
                 , Ui.centerX
                 , Ui.htmlAttribute (title "All releases")
                 ]
