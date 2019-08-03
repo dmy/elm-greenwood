@@ -98,8 +98,9 @@ fn rss_packages(
             None => warp::any().boxed(),
         })
         .and(warp::path(".rss"))
+        .and(warp::header("user-agent"))
         .and(warp::query::<HashMap<String, String>>())
-        .map(move |query| rss::all(query, release))
+        .map(move |user_agent, query| rss::all(user_agent, query, release))
         .with(warp::reply::with::header("content-type", "application/xml"))
         .boxed()
 }

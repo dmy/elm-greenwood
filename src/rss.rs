@@ -6,11 +6,15 @@ use chrono::{Datelike, Local, TimeZone, Utc};
 use rss::*;
 use std::collections::HashMap;
 
-pub fn all(query: HashMap<String, String>, release: &Release) -> String {
+pub fn all(user_agent: String, query: HashMap<String, String>, release: &Release) -> String {
     let conn = db::connect();
     let title = channel_title(&query, release);
     let packages = db::last_packages(&conn, query, release, 42);
-    let items: Vec<Item> = packages.iter().map(item).filter_map(Result::ok).collect();
+    let items: Vec<Item> = packages
+        .iter()
+        .map(|pkg| item(&user_agent, pkg))
+        .filter_map(Result::ok)
+        .collect();
     let last_timestamp = packages
         .iter()
         .map(|item| item.timestamp)
@@ -98,13 +102,13 @@ fn channel_categories(release: &Release) -> Vec<Category> {
     vec![category(elm::PACKAGES_URL, location)]
 }
 
-fn item(package: &Package) -> Result<Item, String> {
+fn item(user_agent: &String, package: &Package) -> Result<Item, String> {
     ItemBuilder::default()
         .title(item_title(package))
         .link(item_link(package))
         .guid(item_guid(package))
         .pub_date(item_pub_date(package))
-        .description(item_description(package))
+        .description(item_description(user_agent, package))
         .comments(item_comments(package))
         .categories(item_categories(package))
         .content(item_content(package))
@@ -142,21 +146,29 @@ fn item_pub_date(package: &Package) -> String {
     Utc.timestamp(package.timestamp, 0).to_rfc2822()
 }
 
-fn item_description(package: &Package) -> String {
+fn item_description(user_agent: &String, package: &Package) -> String {
     format!(
         "{summary}\n<br/>{release} for elm {elm_version}",
-        summary = package.summary.to_string(),
+        summary = escape(user_agent, &package.summary),
         release = match (package.major, package.minor, package.patch) {
             (1, 0, 0) => "New package",
             (_, 0, 0) => "Major version",
             (_, _, 0) => "Minor version",
             _ => "Patch version",
         },
-        elm_version = package
-            .elm_version
-            .replace("<= v <", "to")
-            .replace("<= v <=", "to"),
+        elm_version = escape(user_agent, &package.elm_version)
     )
+}
+
+fn escape<S>(user_agent: &String, str: S) -> String
+where
+    S: Into<String>,
+{
+    if user_agent.contains("Slackbot") {
+        str.into().replace("<=", "≤").replace("<", "˂")
+    } else {
+        str.into().replace("<=", "≤").replace("<", "&lt;")
+    }
 }
 
 fn item_comments(package: &Package) -> String {
