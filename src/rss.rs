@@ -164,11 +164,20 @@ fn escape<S>(user_agent: &String, str: S) -> String
 where
     S: Into<String>,
 {
-    if user_agent.contains("Slackbot") {
-        str.into().replace("<=", "≤").replace("<", "˂")
-    } else {
-        str.into().replace("<=", "≤").replace("<", "&lt;")
-    }
+    str.into()
+        .replace("&", "&amp;")
+        .replace("<=", "≤")
+        .replace(
+            "<",
+            if user_agent.contains("Slackbot") {
+                "˂"
+            } else {
+                "&lt;"
+            },
+        )
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
 }
 
 fn item_comments(package: &Package) -> String {

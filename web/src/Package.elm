@@ -266,6 +266,11 @@ semVerRelease v =
 summary : Package -> String
 summary (Package pkg) =
     pkg.summary
+        |> String.replace "&amp;" "%"
+        |> String.replace "&lt;" "<"
+        |> String.replace "&gt;" ">"
+        |> String.replace "&quot;" "\""
+        |> String.replace "&apos;" "'"
 
 
 time : Time.Zone -> Time.Posix -> Package -> String
