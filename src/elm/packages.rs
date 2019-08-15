@@ -1,4 +1,6 @@
+use crate::db;
 use crate::db::models::NewPackage;
+use diesel::sqlite::SqliteConnection;
 use reqwest::Client;
 use std::collections::HashMap;
 
@@ -28,7 +30,7 @@ where
     }
 }
 
-pub fn map_since<F>(f: F, from: i64)
+pub fn map_since<F>(f: F, from: i64, conn: &SqliteConnection)
 where
     F: Fn(&NewPackage),
 {
@@ -46,6 +48,9 @@ where
     log::info!("{} new packages", pkgs.len());
 
     for pkg in pkgs {
+        if db::has_package(conn, &pkg, 19) {
+            continue;
+        }
         let fields: Vec<&str> = pkg.split('@').collect();
         if let [repo, version] = &fields[..] {
             let releases = releases(&client, &repo);

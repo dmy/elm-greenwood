@@ -19,6 +19,11 @@ use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use warp::Filter;
 
+pub enum Check {
+    FromStart,
+    SinceLast,
+}
+
 fn main() -> syslog::Result<()> {
     syslog::init(Facility::LOG_USER, log::LevelFilter::Info, None)?;
 
@@ -29,10 +34,10 @@ fn main() -> syslog::Result<()> {
     log::info!("Using {} database", db_url);
 
     thread::spawn(|| loop {
-        update_packages();
+        update_packages(Check::FromStart);
         update_outcast_packages();
         for _ in 0..59 {
-            update_packages();
+            update_packages(Check::SinceLast);
             thread::sleep(Duration::from_secs(60));
         }
     });
@@ -64,7 +69,7 @@ fn main() -> syslog::Result<()> {
     Ok(())
 }
 
-pub fn update_packages() {
+pub fn update_packages(check: Check) {
     let conn = db::connect();
     let pkgs_count = db::count_packages(&conn, 19);
     let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
@@ -73,8 +78,13 @@ pub fn update_packages() {
         log::info!("Retrieving all packages");
         elm::packages::map(save);
     } else {
+        let start: i64 = match check {
+            Check::FromStart => 0,
+            Check::SinceLast => pkgs_count,
+        };
+
         log::info!("Updating packages since {}", pkgs_count);
-        elm::packages::map_since(save, pkgs_count);
+        elm::packages::map_since(save, start, &conn);
     }
 }
 

@@ -40,7 +40,19 @@ pub fn has_package_version(conn: &SqliteConnection, pkg: &NewPackage) -> bool {
         .filter(patch.eq(pkg.patch))
         .filter(format.eq(pkg.format))
         .first(conn)
-        .expect("Can't check old format package version from database");
+        .expect("Can't check package from database");
+
+    count > 0
+}
+
+/// package in string format "author/project@major.minor.patch"
+pub fn has_package(conn: &SqliteConnection, pkg: &String, pkg_format: i32) -> bool {
+    let count: i64 = packages
+        .select(count_star())
+        .filter(concat_pkg().eq(pkg))
+        .filter(format.eq(pkg_format))
+        .first(conn)
+        .expect("Can't check package release from database");
 
     count > 0
 }
@@ -93,6 +105,15 @@ pub fn has_old_format_package_version(
     count > 0
 }
 
+fn concat_pkg() -> SqlLiteral<Text> {
+    sql::<Text>(
+        r#"(
+        author || "/" || name || "@" ||
+        CAST(major as TEXT) || "." ||
+        CAST(minor as TEXT) || "." ||
+        CAST(patch as TEXT))"#,
+    )
+}
 fn concat_version() -> SqlLiteral<Text> {
     sql::<Text>(
         r#"(
