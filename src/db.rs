@@ -45,6 +45,21 @@ pub fn has_package_version(conn: &SqliteConnection, pkg: &NewPackage) -> bool {
     count > 0
 }
 
+pub fn check_removed(conn: &SqliteConnection, pkgs: &[String], pkg_format: i32) {
+    let removed_packages = packages
+        .select(concat_pkg())
+        .distinct()
+        .filter(format.eq(pkg_format))
+        .filter(not(concat_pkg().eq_any(pkgs)))
+        .order(timestamp.desc())
+        .load::<String>(conn)
+        .expect(&format!("Cant check removed packages from database"));
+
+    for pkg in removed_packages {
+        log::warn!("{} has been removed", pkg);
+    }
+}
+
 /// package in string format "author/project@major.minor.patch"
 pub fn has_package(conn: &SqliteConnection, pkg: &String, pkg_format: i32) -> bool {
     let count: i64 = packages

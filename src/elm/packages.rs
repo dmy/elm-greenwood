@@ -45,6 +45,10 @@ where
         .map_err(|err| log::error!("can't get packages since {}: {}", from, err))
         .unwrap_or(Vec::new());
 
+    if from == 0 {
+        db::check_removed(conn, &pkgs, 19);
+    }
+
     log::info!("{} new packages", pkgs.len());
 
     for pkg in pkgs {
