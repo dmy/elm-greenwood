@@ -34,6 +34,7 @@ fn main() -> syslog::Result<()> {
     log::info!("Using {} database", db_url);
 
     thread::spawn(|| loop {
+        // Full check once per hour
         update_packages(Check::FromStart);
         update_outcast_packages();
         for _ in 0..59 {
@@ -80,7 +81,9 @@ pub fn update_packages(check: Check) {
     } else {
         let start: i64 = match check {
             Check::FromStart => 0,
-            Check::SinceLast => pkgs_count,
+            // Take a little margin in case some packages have been
+            // removed on the official website.
+            Check::SinceLast => std::cmp::max(pkgs_count - 16, 0),
         };
 
         log::info!("Updating packages since {}", pkgs_count);
