@@ -76,7 +76,7 @@ pub fn update_packages(check: Check) {
     let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
 
     if pkgs_count == 0 {
-        log::info!("Retrieving all packages");
+        log::info!("Checking all packages");
         elm::packages::map(save);
     } else {
         let start: i64 = match check {
@@ -86,7 +86,7 @@ pub fn update_packages(check: Check) {
             Check::SinceLast => std::cmp::max(pkgs_count - 16, 0),
         };
 
-        log::info!("Updating packages since {}", pkgs_count);
+        log::info!("Checking packages since {}", start);
         elm::packages::map_since(save, start, &conn);
     }
 }
@@ -97,7 +97,7 @@ pub fn update_outcast_packages() {
     let conn = db::connect();
     let save = |pkg: &NewPackage| db::save_package(&conn, pkg);
 
-    log::info!("Updating old format packages");
+    log::info!("Checking old format packages");
     elm::old_format_packages::map(save, &conn);
 }
 
