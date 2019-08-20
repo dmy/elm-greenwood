@@ -175,9 +175,9 @@ guid (Package pkg) =
     pkg.guid
 
 
-image : Package -> String
-image (Package pkg) =
-    "https://github.com/" ++ pkg.author ++ ".png" ++ "?size=32"
+image : Int -> Package -> String
+image size (Package pkg) =
+    "https://github.com/" ++ pkg.author ++ ".png" ++ "?size=" ++ String.fromInt size
 
 
 install : Package -> String

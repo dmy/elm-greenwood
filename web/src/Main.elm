@@ -711,15 +711,15 @@ viewSummary pkg unfolded =
 viewImage : Package -> Bool -> Ui.Element msg
 viewImage pkg unfolded =
     let
-        img =
+        img size =
             Ui.image
-                [ Ui.width (Ui.px 32)
-                , Ui.height (Ui.px 32)
+                [ Ui.width (Ui.px size)
+                , Ui.height (Ui.px size)
                 , Ui.alignTop
                 , Font.bold
                 , Ui.clip
                 ]
-                { src = Package.image pkg
+                { src = Package.image size pkg
                 , description = Package.author pkg
                 }
     in
@@ -729,11 +729,11 @@ viewImage pkg unfolded =
                 (title (Package.author pkg ++ " last releases"))
             ]
             { url = "/last?" ++ Package.author pkg ++ "=*"
-            , label = img
+            , label = img 64
             }
 
     else
-        Ui.el [] img
+        Ui.el [] (img 32)
 
 
 viewName : Package -> Ui.Element msg
