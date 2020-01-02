@@ -117,9 +117,22 @@ fn item(user_agent: &String, package: &Package) -> Result<Item, String> {
 
 fn item_title(package: &Package) -> String {
     format!(
-        "{}/{} {}.{}.{}",
-        package.author, package.name, package.major, package.minor, package.patch
+        "{author}/{name} {major}.{minor}.{patch}{emoji}",
+        author = package.author,
+        name = package.name,
+        major = package.major,
+        minor = package.minor,
+        patch = package.patch,
+        emoji = if is_new_package(package) { "✨" } else { "" }
     )
+}
+
+fn is_new_package(package: &Package) -> bool {
+    if package.major == 1 && package.minor == 0 && package.patch == 0 {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 fn item_link(package: &Package) -> String {
@@ -148,15 +161,9 @@ fn item_pub_date(package: &Package) -> String {
 
 fn item_description(user_agent: &String, package: &Package) -> String {
     format!(
-        "{summary}\n<br/>{release} for elm {elm_version}",
-        summary = escape(user_agent, &package.summary),
-        release = match (package.major, package.minor, package.patch) {
-            (1, 0, 0) => "New package",
-            (_, 0, 0) => "Major version",
-            (_, _, 0) => "Minor version",
-            _ => "Patch version",
-        },
-        elm_version = escape(user_agent, &package.elm_version)
+        "{elm_version}\n<br/>{summary}",
+        elm_version = escape(user_agent, &package.elm_version).replace(" v ", " elm "),
+        summary = escape(user_agent, &package.summary)
     )
 }
 

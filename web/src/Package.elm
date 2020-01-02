@@ -122,7 +122,7 @@ rssVersion : Rss.Item -> Maybe String
 rssVersion item =
     case Maybe.map (String.split " ") (Rss.Item.title item) of
         Just [ _, version_ ] ->
-            Just version_
+            Just (String.filter (\c -> Char.isDigit c || c == '.') version_)
 
         _ ->
             Nothing
@@ -157,7 +157,9 @@ description : Rss.Item -> Maybe String
 description item =
     Rss.Item.description item
         |> Maybe.map String.lines
+        |> Maybe.andThen List.tail
         |> Maybe.andThen List.head
+        |> Maybe.map (String.dropLeft 5)
 
 
 doc : Package -> String
