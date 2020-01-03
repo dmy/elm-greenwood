@@ -160,11 +160,36 @@ fn item_pub_date(package: &Package) -> String {
 }
 
 fn item_description(user_agent: &String, package: &Package) -> String {
-    format!(
-        "{elm_version}\n<br/>{summary}",
-        elm_version = escape(user_agent, &package.elm_version).replace(" v ", " elm "),
-        summary = escape(user_agent, &package.summary)
-    )
+    if is_slack(user_agent) {
+        format!(
+            "{elm_version}<br/><br/>{summary}",
+            elm_version = escape(user_agent, elm_version(package)),
+            summary = escape(user_agent, &package.summary)
+        )
+    } else {
+        escape(user_agent, &package.summary)
+    }
+}
+
+fn is_slack(user_agent: &String) -> bool {
+    if user_agent.contains("Slackbot") {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+fn elm_version(package: &Package) -> String {
+    let splitter = |c| c == '.' || c == ' ';
+    let fields: Vec<&str> = package.elm_version.split(splitter).collect();
+    if let [maj1, min1, "0", "<=", "v", "<", maj2, min2, "0"] = &fields[..] {
+        if let (Some(lower), Some(upper)) = (min1.parse::<i32>().ok(), min2.parse::<i32>().ok()) {
+            if maj1 == maj2 && lower + 1 == upper {
+                return format!("elm {}.{}", maj1, min1);
+            }
+        }
+    }
+    package.elm_version.replace(" v ", " elm ")
 }
 
 fn escape<S>(user_agent: &String, str: S) -> String
@@ -174,14 +199,7 @@ where
     str.into()
         .replace("&", "&amp;")
         .replace("<=", "≤")
-        .replace(
-            "<",
-            if user_agent.contains("Slackbot") {
-                "˂"
-            } else {
-                "&lt;"
-            },
-        )
+        .replace("<", if is_slack(user_agent) { "˂" } else { "&lt;" })
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
         .replace("'", "&apos;")

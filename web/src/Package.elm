@@ -69,7 +69,7 @@ fromRssItem item =
         |> from (rssName item)
         |> from (rssVersion item)
         |> from (rssRelease item)
-        |> from (description item)
+        |> from (Rss.Item.description item)
         |> from (Rss.Item.pubDate item)
         |> from (Rss.Item.link item)
         |> from (rssElmVersion item)
@@ -151,15 +151,6 @@ withDomain domain category =
 dependencies : Package -> List String
 dependencies (Package pkg) =
     pkg.dependencies
-
-
-description : Rss.Item -> Maybe String
-description item =
-    Rss.Item.description item
-        |> Maybe.map String.lines
-        |> Maybe.andThen List.tail
-        |> Maybe.andThen List.head
-        |> Maybe.map (String.dropLeft 5)
 
 
 doc : Package -> String
