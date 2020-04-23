@@ -136,14 +136,13 @@ fn is_new_package(package: &Package) -> bool {
 }
 
 fn item_link(package: &Package) -> String {
-    let elm_version = &package.elm_version[..4];
-    let host = match elm_version {
-        "0.19" => "package.elm-lang.org",
-        _ => "old.elm.dmy.fr",
-    };
     format!(
-        "https://{}/packages/{}/{}/{}.{}.{}/",
-        host, package.author, package.name, package.major, package.minor, package.patch
+        "https://package.elm-lang.org/packages/{author}/{name}/{major}.{minor}.{patch}/",
+        author = package.author,
+        name = package.name,
+        major = package.major,
+        minor = package.minor,
+        patch = package.patch,
     )
 }
 
