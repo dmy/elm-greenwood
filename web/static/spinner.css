@@ -31,7 +31,7 @@
   width: 18px;
   height: 18px;
 
-  background-color: #7fd13b;
+  background-color: #3686c8;
   border-radius: 100%;
   display: inline-block;
   -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
@@ -39,11 +39,11 @@
 }
 
 .spinner > .bounce2 {
-  background-color: #60b5cc;
+  background-color: #3686c8;
 }
 
 .spinner > .bounce3 {
-  background-color: #5a6378;
+  background-color: #3686c8;
 }
 
 .spinner .bounce1 {

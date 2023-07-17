@@ -943,7 +943,10 @@ headerFontWeight pkg =
 headerColor : Package -> Ui.Color
 headerColor pkg =
     case Package.release pkg of
-        Package.Patch ->
+        Package.New ->
+            theme.white
+
+        Package.Major ->
             theme.white
 
         _ ->
