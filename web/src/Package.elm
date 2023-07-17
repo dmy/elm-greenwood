@@ -161,6 +161,7 @@ doc (Package pkg) =
 elmVersion : Package -> String
 elmVersion (Package pkg) =
     pkg.elmVersion
+        |> String.replace "&lt;" "<"
 
 
 guid : Package -> String

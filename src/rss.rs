@@ -2,7 +2,7 @@ use crate::db;
 use crate::db::models::Package;
 use crate::elm;
 use crate::release::Release;
-use chrono::{Datelike, Local, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
 use rss::*;
 use std::collections::HashMap;
 
@@ -26,26 +26,20 @@ pub fn all(user_agent: String, query: HashMap<String, String>, release: &Release
         "content".to_string(),
         "http://purl.org/rss/1.0/modules/content/".to_string(),
     );
-    let channel = ChannelBuilder::default()
+
+    ChannelBuilder::default()
         .namespaces(namespaces)
         .title(&title)
-        .link("https://elm-greenwood.com")
-        .description(format!("{} from elm-greenwood.com", &title))
+        .link("https://releases.elm.dmy.fr")
+        .description(format!("{}", &title))
         .image(channel_image())
-        .webmaster("admin@elm-greenwood.com".to_string())
-        .copyright(channel_copyright())
         .pub_date(Utc.timestamp(last_timestamp, 0).to_rfc2822())
         .language("en-us".to_string())
         .categories(channel_categories(release))
         .items(items)
         .build()
         .unwrap()
-        .to_string();
-
-    format!(
-        "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n{}",
-        channel
-    )
+        .to_string()
 }
 
 fn channel_title(query: &HashMap<String, String>, release: &Release) -> String {
@@ -80,14 +74,10 @@ fn channel_title(query: &HashMap<String, String>, release: &Release) -> String {
 fn channel_image() -> Option<Image> {
     ImageBuilder::default()
         .title("Elm logo")
-        .link("https://elm-greenwood.com")
-        .url("https://github.com/elm.png")
+        .link("https://relases.elm.dmy.fr")
+        .url("https://releases.elm.dmy.fr")
         .build()
         .ok()
-}
-
-fn channel_copyright() -> String {
-    format!("Elm Greenwood © {}", Local::now().year())
 }
 
 fn channel_categories(release: &Release) -> Vec<Category> {
@@ -240,20 +230,8 @@ where
 {
     let mut category = Category::default();
     category.set_domain(domain.into());
-    category.set_name(cdata(location));
+    category.set_name(location);
     category
-}
-
-fn cdata<S>(data: S) -> String
-where
-    S: Into<String>,
-{
-    let string = data.into();
-    if string.contains("<") {
-        format!("<![CDATA[{}]]>", string)
-    } else {
-        string
-    }
 }
 
 fn item_content(package: &Package) -> String {

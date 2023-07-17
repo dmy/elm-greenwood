@@ -44,7 +44,7 @@ for (const [author,name] of Object.entries(queryMap)) {
 query = query.join("&");
 
 console.log("Web feed:");
-console.log("https://elm-greenwood.com?" + query);
+console.log("https://releases.elm.dmy.fr?" + query);
 
 console.log("\nRSS feed:");
-console.log("https://elm-greenwood.com/.rss?" + query);
+console.log("https://releases.elm.dmy.fr/.rss?" + query);
