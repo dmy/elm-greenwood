@@ -1,6 +1,6 @@
 {
   "name": "elm-deps-rss",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Generate an Elm project RSS feed for its dependencies releases",
   "bin": "index.js",
   "scripts": {
