@@ -150,7 +150,7 @@ withDomain domain category =
 
 dependencies : Package -> List String
 dependencies (Package pkg) =
-    pkg.dependencies
+    List.map (String.replace "&lt;" "<") pkg.dependencies
 
 
 doc : Package -> String
@@ -161,6 +161,7 @@ doc (Package pkg) =
 elmVersion : Package -> String
 elmVersion (Package pkg) =
     pkg.elmVersion
+        |> String.replace "&lt;" "<"
 
 
 guid : Package -> String

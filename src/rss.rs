@@ -2,7 +2,7 @@ use crate::db;
 use crate::db::models::Package;
 use crate::elm;
 use crate::release::Release;
-use chrono::{Datelike, Local, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
 use rss::*;
 use std::collections::HashMap;
 
@@ -230,20 +230,8 @@ where
 {
     let mut category = Category::default();
     category.set_domain(domain.into());
-    category.set_name(cdata(location));
+    category.set_name(location);
     category
-}
-
-fn cdata<S>(data: S) -> String
-where
-    S: Into<String>,
-{
-    let string = data.into();
-    if string.contains("<") {
-        format!("<![CDATA[{}]]>", string)
-    } else {
-        string
-    }
 }
 
 fn item_content(package: &Package) -> String {

@@ -1,8 +1,8 @@
 [package]
 name = "greenwood"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Rémi Lefèvre <rlefevre@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 chrono = "0.4.7"
