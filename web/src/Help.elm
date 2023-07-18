@@ -17,7 +17,7 @@ view =
         ]
         [ section "About"
             [ p
-                [ "The elm-greenwood.com website provides dynamic web and RSS feeds"
+                [ "This website provides dynamic web and RSS feeds"
                 , " for Elm packages releases."
                 , " You can customize the releases, packages and authors included"
                 , " in a feed by customizing the URL."
